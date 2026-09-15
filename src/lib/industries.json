@@ -1,0 +1,142 @@
+[
+  {
+    "value": "Automotive",
+    "label": "汽车用品"
+  },
+  {
+    "value": "Baby",
+    "label": "婴童用品"
+  },
+  {
+    "value": "Beauty and personal care",
+    "label": "美妆与个人护理"
+  },
+  {
+    "value": "Computers",
+    "label": "电脑及相关产品"
+  },
+  {
+    "value": "Crafts",
+    "label": "手工艺品"
+  },
+  {
+    "value": "Electronics",
+    "label": "电子产品"
+  },
+  {
+    "value": "Fashion Clothing and Accessories",
+    "label": "时尚服饰与配饰"
+  },
+  {
+    "value": "Health and Household",
+    "label": "健康与家庭护理"
+  },
+  {
+    "value": "Home and Kitchen",
+    "label": "家居与厨房用品"
+  },
+  {
+    "value": "Industrial and Scientific",
+    "label": "工业与科研用品"
+  },
+  {
+    "value": "Luggage",
+    "label": "箱包"
+  },
+  {
+    "value": "Movies Television",
+    "label": "影视娱乐产品"
+  },
+  {
+    "value": "Pet supplies",
+    "label": "宠物用品"
+  },
+  {
+    "value": "Sports and Outdoors",
+    "label": "运动与户外用品"
+  },
+  {
+    "value": "Tools Home Improvement",
+    "label": "工具与家装用品"
+  },
+  {
+    "value": "Toys and Games",
+    "label": "玩具与游戏"
+  },
+  {
+    "value": "Food",
+    "label": "食品"
+  },
+  {
+    "value": "Accounting, Human Resources & Legal",
+    "label": "会计、人力资源与法律服务"
+  },
+  {
+    "value": "Advertising services, advertising publishers, advertising channels and exhibitions",
+    "label": "广告服务、广告发布、广告渠道与会展"
+  },
+  {
+    "value": "Art Design Architecture and Media",
+    "label": "艺术、设计、建筑与媒体"
+  },
+  {
+    "value": "Data Entry & Admin",
+    "label": "数据录入与行政服务"
+  },
+  {
+    "value": "Digital Goods: Computer software, mobile applications producer developers or selling (Excludes Games)",
+    "label": "数字商品：计算机软件、移动应用开发或销售（不含游戏）"
+  },
+  {
+    "value": "Digital goods: online games",
+    "label": "数字商品：网络游戏"
+  },
+  {
+    "value": "Engineering & Science",
+    "label": "工程与科学服务"
+  },
+  {
+    "value": "File sharing / storage services (cyber-lockers)",
+    "label": "文件共享 / 存储服务（网盘）"
+  },
+  {
+    "value": "Freight, Shipping & Transportation",
+    "label": "货运、航运与运输服务"
+  },
+  {
+    "value": "Lodging, hotels, motels resort and accommodation services",
+    "label": "住宿、酒店、汽车旅馆、度假村及住宿服务"
+  },
+  {
+    "value": "Media and Internet Video Service",
+    "label": "媒体与互联网视频服务"
+  },
+  {
+    "value": "Online Education",
+    "label": "在线教育"
+  },
+  {
+    "value": "Passenger railways, limousines, taxicabs, motor freight carriers",
+    "label": "客运铁路、礼宾车、出租车及机动车承运服务"
+  },
+  {
+    "value": "Photographic studios and portraits",
+    "label": "摄影工作室与肖像摄影"
+  },
+  {
+    "value": "Telecommunications",
+    "label": "电信服务"
+  },
+  {
+    "value": "Translation & Languages",
+    "label": "翻译与语言服务"
+  },
+  {
+    "value": "Travel agency, ticketing services, and tour operators",
+    "label": "旅行社、票务服务与旅游运营"
+  },
+  {
+    "value": "Websites, IT & Software",
+    "label": "网站、IT 与软件服务"
+  }
+]

@@ -1,7 +1,4 @@
 <script setup lang="ts">
-import HelloWorld from './components/HelloWorld.vue'
+import MfaChallenge from "./components/MfaChallenge.vue";
 </script>
-
-<template>
-  <HelloWorld />
-</template>
+<template><RouterView /><MfaChallenge /></template>

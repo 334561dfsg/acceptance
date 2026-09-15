@@ -1,47 +1,43 @@
-# Acceptance
+# Acceptance · 企业开户与美元结算 MVP
 
-基于 Vue 3、TypeScript 和 Vite 的前端项目，使用官方 `vue-ts` 模板初始化。
-
-## 环境要求
-
-Node.js 20.19+ 或 22.12+，使用 npm 管理依赖。
-
-## 本地开发
+Vue 3 + TypeScript + Vite 前端演示，功能依据 PayFi API v1.2.2。
 
 ```bash
-npm install
+npm ci
 npm run dev
+npm test
+npm run build
 ```
 
-打开终端输出的本地地址，默认是 http://localhost:5173。
+开发地址默认 http://localhost:5173/，history 路由部署需要回退到 index.html。
 
-## 常用命令
+## 演示流程
 
-```bash
-npm run type-check # 检查 TypeScript 和 Vue 组件类型
-npm run build      # 类型检查并构建，产物输出到 dist/
-npm run preview    # 本地预览构建产物，需先运行 build
-```
+1. 客户系统登录，使用当前演示邮箱申请企业开户。
+2. 填写香港企业 KYC、法人/受益人资料并选择材料；可点击“填入演示资料”。
+3. 提交审核，模拟通道审核通过；也可模拟退回补件。
+4. 在收款银行账户中添加本企业或第三方企业对公账户，模拟审核通过；支持驳回后重新提交。
+5. 创建 USDT 收款订单并模拟到账，增加正常可用余额。
+6. 在 USD 付款中选择已审核银行，输入 USDT 支付金额，获取 5 分钟报价，确认用途并提交。
+7. 模拟银行付款完成，在付款订单中查看详情。
 
-CI 或根据锁文件重新安装依赖时，使用 `npm ci`。
+## 路由
 
-## 项目结构
+- `/`：客户系统 / 管理后台两个入口。
+- `/client/onboarding`：企业申请、KYC、审核进度；认证通过后展示企业资料。
+- `/client/accounts`：多个对公收款账户、独立审核和详情。
+- `/client/exchange`：使用 USDT 余额支付 USD，未开户或未完成审核时显示引导。
+- `/client/payments`：USDT 充值及充值单。
+- `/client/orders`：付款订单、筛选与详情。
+- `/admin`：待建设占位。
 
-```text
-public/             静态资源
-src/
-  assets/           参与构建的资源
-  components/       Vue 组件
-  App.vue           根组件
-  main.ts           应用入口
-  style.css         全局样式
-index.html          HTML 入口
-vite.config.ts      Vite 配置
-tsconfig*.json      TypeScript 配置
-```
+美元换 U 及参考换算入口已移除。
 
-组件使用 `<script setup lang="ts">` 编写。首页保留官方模板示例，后续可从 `src/App.vue` 开始开发。
+## 边界
 
-## 仓库
+- 全部操作为内存 mock，无真实身份认证、开户、上传或交易。刷新会重置。
+- 文件仅保存本地元数据，检查扩展名及大小，未传输文件内容；演示材料占位明确标记。真实上传仍须服务端验证 MIME/文件内容及归属。
+- 本期 KYC 为香港企业及护照身份材料；银行支持香港 SWIFT/RTGS、美国 SWIFT 的 SELF/THIRD_PARTY 共六种 USD 对公场景，不支持个人账户。
+- 费用/汇率为固定示例，不是接口规定的真实价格。
 
-[334561dfsg/acceptance](https://github.com/334561dfsg/acceptance)
+详见 [接口与实现对照](docs/payfi-mvp.md)。
