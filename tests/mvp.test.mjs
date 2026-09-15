@@ -416,3 +416,20 @@ test("香港企业地址限定地区并校验区域与分区对应关系", () =>
     "",
   );
 });
+
+test("管理台生成独立客户数据，不覆盖当前客户资金和企业信息", () => {
+  const before = JSON.stringify({ mvp, onboarding: ob.onboarding });
+  const target = JSON.parse(before);
+  target.deposits = [];
+  target.mvp.merchant = { no: "", name: "", status: "", channel: "" };
+  target.mvp.banks = [];
+  target.mvp.orders = [];
+  target.onboarding.owner = "";
+  target.onboarding.company = {};
+  target.onboarding.materials = {};
+  mock.seedMockData("demo@acceptance.example", 1800000000000, target);
+  assert.equal(target.mvp.banks.length, 4);
+  assert.equal(target.deposits.length, 24);
+  assert.equal(target.mvp.orders.length, 8);
+  assert.equal(JSON.stringify({ mvp, onboarding: ob.onboarding }), before);
+});

@@ -152,7 +152,7 @@ function close() {
 }
 .security-row p {
   font-size: 13px;
-  color: #7b8670;
+  color: #64748b;
 }
 .security-actions {
   display: flex;
@@ -169,7 +169,7 @@ function close() {
   display: block;
   overflow-wrap: anywhere;
   padding: 14px;
-  background: #f3f6ee;
+  background: #f8fafc;
   margin-top: 12px;
   user-select: all;
 }

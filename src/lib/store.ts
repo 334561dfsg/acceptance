@@ -1,3 +1,4 @@
+import { findCustomer } from "./password";
 import { reactive } from "vue";
 import { onboarding, resetOnboarding } from "./onboarding";
 import { seedMockData } from "./mock-data";
@@ -10,9 +11,8 @@ export function restoreSession() {
   try {
     const saved = JSON.parse(sessionStorage.getItem(sessionKey) || "null");
     if (
-      ["demo@acceptance.example", "empty@acceptance.example"].includes(
-        saved?.email,
-      ) &&
+      typeof saved?.email === "string" &&
+      findCustomer(saved.email)?.enabled &&
       Number.isFinite(saved.expires) &&
       saved.expires > Date.now()
     ) {

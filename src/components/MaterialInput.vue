@@ -99,7 +99,7 @@ function select(e: Event) {
 </template>
 <style scoped>
 .material-guidance {
-  color: #738068;
+  color: #475569;
   font-size: 13px;
   line-height: 1.8;
   margin: 10px 0;
@@ -109,7 +109,7 @@ function select(e: Event) {
 }
 .material-help {
   font-size: 12px;
-  color: #7d8773;
+  color: #64748b;
   margin: 10px 0 16px;
 }
 .material-upload-area {
@@ -117,15 +117,15 @@ function select(e: Event) {
   align-items: center;
   gap: 16px;
   padding: 24px;
-  border: 1px dashed #c6d2b9;
+  border: 1px dashed #cbd5e1;
   border-radius: 10px;
-  background: #f8faf5;
+  background: #f8fafc;
 }
 .material-upload-area.has-file {
   border-style: solid;
 }
 .material-upload-icon {
-  color: #6b8454;
+  color: #475569;
   flex-shrink: 0;
 }
 .material-file-content {
@@ -140,7 +140,7 @@ function select(e: Event) {
 }
 .material-file-content span {
   font-size: 12px;
-  color: #7d8773;
+  color: #64748b;
 }
 .material-file-actions {
   display: flex;

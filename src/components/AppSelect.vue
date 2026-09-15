@@ -314,9 +314,9 @@ onBeforeUnmount(() => {
   gap: 12px;
   padding: 11px 14px;
   background: #fff;
-  border: 1px solid #dce2d2;
+  border: 1px solid #cbd5e1;
   border-radius: 7px;
-  color: #49533d;
+  color: #1e293b;
   font: inherit;
   font-size: 13px;
   text-align: left;
@@ -324,7 +324,7 @@ onBeforeUnmount(() => {
 }
 .app-select-trigger:focus-visible,
 .app-select-trigger[aria-expanded="true"] {
-  outline: 2px solid #8ba66c;
+  outline: 2px solid #64748b;
   outline-offset: 2px;
 }
 .app-select-trigger:disabled {
@@ -349,10 +349,10 @@ onBeforeUnmount(() => {
   margin: 0;
   padding: 5px;
   background: white;
-  color: #39442f;
-  border: 1px solid #dfe5d7;
+  color: #1e293b;
+  border: 1px solid #e2e8f0;
   border-radius: 9px;
-  box-shadow: 0 8px 28px #24311b24;
+  box-shadow: 0 8px 28px #1e293b24;
   overflow: hidden;
   box-sizing: border-box;
 }
@@ -381,7 +381,7 @@ onBeforeUnmount(() => {
   overflow-wrap: anywhere;
 }
 .app-select-option.active {
-  background: #edf3e5;
+  background: #eaf1fc;
 }
 .app-select-option.disabled {
   opacity: 0.45;
@@ -389,20 +389,20 @@ onBeforeUnmount(() => {
 }
 .app-select-option svg {
   flex-shrink: 0;
-  color: #5f7c43;
+  color: #475569;
 }
 .app-select-empty {
   padding: 18px;
   text-align: center;
   font-size: 13px;
-  color: #869178;
+  color: #64748b;
 }
 .app-select-search {
   display: flex;
   align-items: center;
   gap: 8px;
   padding: 5px 9px 9px;
-  border-bottom: 1px solid #edf0e7;
+  border-bottom: 1px solid #e2e8f0;
   flex-shrink: 0;
 }
 .app-select-search input {

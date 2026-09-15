@@ -67,11 +67,11 @@ const fieldError = (f: Entry) =>
 <style scoped>
 .field-help {
   margin: 8px 0 0;
-  color: var(--muted, #78816f);
+  color: var(--muted, #64748b);
   font-size: 12px;
   line-height: 1.6;
 }
 input[readonly] {
-  background: #f5f6f3;
+  background: #f8fafc;
 }
 </style>

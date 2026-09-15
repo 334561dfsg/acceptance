@@ -60,12 +60,12 @@ async function login() {
               y2="570"
               gradientUnits="userSpaceOnUse"
             >
-              <stop stop-color="#86a95e" />
-              <stop offset="1" stop-color="#d9e7c6" />
+              <stop stop-color="#64748b" />
+              <stop offset="1" stop-color="#bfdbfe" />
             </linearGradient>
             <radialGradient id="login-glow">
-              <stop stop-color="#e0efcc" />
-              <stop offset="1" stop-color="#edf3e3" stop-opacity="0" />
+              <stop stop-color="#eaf1fc" />
+              <stop offset="1" stop-color="#eaf1fc" stop-opacity="0" />
             </radialGradient>
             <pattern
               id="login-grid"
@@ -73,7 +73,7 @@ async function login() {
               height="32"
               patternUnits="userSpaceOnUse"
             >
-              <circle cx="1" cy="1" r="1" fill="#9aaa88" opacity=".3" />
+              <circle cx="1" cy="1" r="1" fill="#64748b" opacity=".3" />
             </pattern>
           </defs>
           <rect width="640" height="640" fill="url(#login-grid)" />
@@ -96,19 +96,19 @@ async function login() {
               transform="rotate(32 320 320)"
             />
           </g>
-          <g stroke="#88a76a" stroke-width="1.5">
+          <g stroke="#64748b" stroke-width="1.5">
             <path
               d="M121 192h78l60 76M501 178h-61l-65 89M114 444h104l49-72M510 437h-83l-51-66"
             />
             <path d="M320 75v78m0 335v77" stroke-dasharray="4 8" />
           </g>
-          <g fill="#f9fcf4" stroke="#b6cba0">
+          <g fill="#f8fafc" stroke="#64748b">
             <rect x="88" y="168" width="64" height="48" rx="12" />
             <rect x="473" y="154" width="56" height="48" rx="12" />
             <rect x="83" y="420" width="64" height="48" rx="12" />
             <rect x="480" y="412" width="62" height="48" rx="12" />
           </g>
-          <g stroke="#668847" stroke-width="2" stroke-linecap="round">
+          <g stroke="#2563eb" stroke-width="2" stroke-linecap="round">
             <path
               d="M107 185h24m-24 8h16M491 178h20m-7-7 7 7-7 7M100 437h25m-25 8h17M499 434l7 7 14-15"
             />
@@ -119,7 +119,7 @@ async function login() {
             width="172"
             height="172"
             rx="42"
-            fill="#e0ebd1"
+            fill="#eaf1fc"
             fill-opacity=".6"
             transform="rotate(-10 320 320)"
           />
@@ -129,14 +129,14 @@ async function login() {
             width="148"
             height="148"
             rx="34"
-            fill="#fbfdf7"
-            stroke="#bbcea7"
+            fill="#f8fafc"
+            stroke="#cbd5e1"
           />
-          <g stroke="#557637" stroke-width="5" stroke-linejoin="round">
+          <g stroke="#2563eb" stroke-width="5" stroke-linejoin="round">
             <rect x="286" y="300" width="51" height="51" rx="8" />
             <rect x="303" y="283" width="51" height="51" rx="8" />
           </g>
-          <g fill="#6d914e">
+          <g fill="#2563eb">
             <circle cx="320" cy="88" r="5" />
             <circle cx="497" cy="320" r="5" />
             <circle cx="207" cy="521" r="5" />
@@ -272,7 +272,7 @@ async function login() {
 .login-mfa-help p {
   font-size: 12px;
   line-height: 1.65;
-  color: #89917f;
+  color: #64748b;
   margin: 0;
 }
 .login-mfa-help button {
@@ -316,15 +316,15 @@ async function login() {
 .login-account-options button {
   flex: 1;
   padding: 10px;
-  border: 1px solid #dce4d3;
+  border: 1px solid #e2e8f0;
   border-radius: 8px;
-  color: #68785a;
+  color: #475569;
   background: white;
   cursor: pointer;
 }
 .login-account-options button[aria-pressed="true"] {
-  background: #edf3e6;
-  color: #344829;
-  border-color: #8ca573;
+  background: #eaf1fc;
+  color: #1e293b;
+  border-color: #64748b;
 }
 </style>

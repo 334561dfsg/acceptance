@@ -1,3 +1,4 @@
+import { findCustomer } from "./lib/password";
 import { createRouter, createWebHistory } from "vue-router";
 import { mfaInfo } from "./lib/mfa";
 import { demo } from "./lib/store";
@@ -9,12 +10,32 @@ const router = createRouter({
   routes: [
     { path: "/", component: PortalView },
     { path: "/login", component: LoginView },
-    { path: "/admin", component: () => import("./views/AdminView.vue") },
+    { path: "/admin", redirect: "/admin/customers" },
+    {
+      path: "/admin/customers",
+      component: () => import("./views/AdminView.vue"),
+      meta: { title: "客户账户管理" },
+    },
+    {
+      path: "/admin/customers/:id",
+      component: () => import("./views/AdminView.vue"),
+      meta: { title: "客户详情" },
+    },
+    {
+      path: "/admin/activity",
+      component: () => import("./views/AdminView.vue"),
+      meta: { title: "操作记录" },
+    },
     {
       path: "/client",
       component: ClientLayout,
       meta: { client: true },
       children: [
+        {
+          path: "password-setup",
+          component: () => import("./views/PasswordSetupView.vue"),
+          meta: { title: "设置登录密码" },
+        },
         {
           path: "security",
           component: () => import("./views/SecuritySetupView.vue"),
@@ -68,8 +89,15 @@ const router = createRouter({
   scrollBehavior: () => ({ top: 0 }),
 });
 router.beforeEach((to) => {
-  if (to.meta.client && !demo.email)
+  if (to.meta.client && (!demo.email || !findCustomer(demo.email)?.enabled))
     return { path: "/login", query: { redirect: to.fullPath } };
+  if (
+    to.meta.client &&
+    findCustomer(demo.email)?.mustChangePassword &&
+    to.path !== "/client/password-setup"
+  )
+    return "/client/password-setup";
+  if (to.path === "/client/password-setup") return;
   if (to.meta.client && !mfaInfo(demo.email) && to.path !== "/client/security")
     return "/client/security";
 });

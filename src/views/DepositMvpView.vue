@@ -87,10 +87,20 @@ const flowLabels: Record<string, string> = {
   REFUNDING: "退款中",
   REFUND_SUCCEED: "退款成功",
 };
+// Display-only fixtures are deliberately invalid chain addresses; never put them in API order data.
+const displayAddress = computed(() => {
+  if (!selected.value) return "";
+  return (
+    selected.value.address ||
+    (selected.value.network === "TRON"
+      ? "T_DEMO_TRC20_USDT_DO_NOT_TRANSFER"
+      : "0x_DEMO_ERC20_USDT_DO_NOT_TRANSFER")
+  );
+});
 const addressQr = ref("");
 const copied = ref(false);
 watch(
-  () => selected.value?.address,
+  displayAddress,
   async (address, _, onCleanup) => {
     let active = true;
     onCleanup(() => {
@@ -111,8 +121,8 @@ watch(
 );
 async function copyAddress() {
   try {
-    if (selected.value?.address) {
-      await navigator.clipboard.writeText(selected.value.address);
+    if (displayAddress.value) {
+      await navigator.clipboard.writeText(displayAddress.value);
       copied.value = true;
     }
   } catch {
@@ -316,17 +326,17 @@ const visibleRows = computed(() =>
               />
               <template v-else
                 ><IconQrcode :size="64" stroke-width="1" /><span>{{
-                  selected.address ? "二维码暂不可用" : "地址未就绪"
+                  displayAddress ? "二维码暂不可用" : "地址未就绪"
                 }}</span></template
               >
             </div>
             <div class="deposit-address-content">
               <label>本次充值收款地址</label>
               <div class="deposit-address-box">
-                <code v-if="selected.address">{{ selected.address }}</code>
+                <code v-if="displayAddress">{{ displayAddress }}</code>
                 <span v-else>尚未取得收款地址，暂不可转账</span>
                 <button
-                  v-if="selected.address"
+                  v-if="displayAddress"
                   class="icon-button"
                   :aria-label="copied ? '已复制地址' : '复制收款地址'"
                   @click="copyAddress"
@@ -340,9 +350,8 @@ const visibleRows = computed(() =>
               <div class="deposit-network-note">
                 <IconShieldCheck :size="22" />
                 <div>
-                  <strong>请使用相同网络转账</strong>
+                  <strong>收款币种与网络</strong>
                   <p>
-                    仅接收
                     {{
                       selected.network === "TRON"
                         ? "TRON（TRC20）"
@@ -350,7 +359,9 @@ const visibleRows = computed(() =>
                     }}
                     网络的 {{ selected.coin }}。
                   </p>
-                  <p>此地址用于本次充值订单，订单完成或终止后请勿继续转入。</p>
+                  <p v-if="selected.address">
+                    此地址用于本次充值订单，订单完成或终止后请勿继续转入。
+                  </p>
                 </div>
               </div>
             </div>
@@ -529,13 +540,13 @@ const visibleRows = computed(() =>
   width: 44px;
   height: 44px;
   border-radius: 50%;
-  background: #eaf2df;
-  color: #537730;
+  background: #eaf1fc;
+  color: #2563eb;
   font-size: 26px;
 }
 .deposit-intro p {
   margin: 6px 0 0;
-  color: #7c8574;
+  color: #64748b;
   font-size: 13px;
 }
 .deposit-network {
@@ -545,11 +556,11 @@ const visibleRows = computed(() =>
   gap: 12px;
   margin-bottom: 24px;
   font-size: 13px;
-  color: #7c8574;
+  color: #64748b;
 }
 .deposit-network strong {
   padding: 8px 12px;
-  background: #263020;
+  background: #1e293b;
   color: white;
   border-radius: 6px;
 }
@@ -562,15 +573,15 @@ const visibleRows = computed(() =>
 .deposit-qr {
   width: 180px;
   min-height: 180px;
-  border: 1px solid #e6e9df;
+  border: 1px solid #e2e8f0;
   border-radius: 10px;
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
   gap: 12px;
-  color: #92998a;
-  background: #fafbf8;
+  color: #64748b;
+  background: #f8fafc;
   overflow: hidden;
   font-size: 12px;
 }
@@ -579,14 +590,14 @@ const visibleRows = computed(() =>
 }
 .deposit-address-content label {
   font-size: 13px;
-  color: #7c8574;
+  color: #64748b;
 }
 .deposit-address-box {
   display: flex;
   align-items: center;
   gap: 8px;
   padding: 14px;
-  background: #f5f6f2;
+  background: #f8fafc;
   border-radius: 8px;
   margin: 10px 0 16px;
   min-height: 68px;
@@ -600,7 +611,7 @@ const visibleRows = computed(() =>
 .deposit-address-box > span {
   font-size: 13px;
   line-height: 1.7;
-  color: #7c8574;
+  color: #64748b;
 }
 .deposit-address-box button {
   flex-shrink: 0;
@@ -609,8 +620,8 @@ const visibleRows = computed(() =>
 .deposit-network-note {
   display: flex;
   gap: 10px;
-  background: #f0f6eb;
-  border: 1px solid #e1ebd9;
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
   border-radius: 8px;
   padding: 14px;
   font-size: 12px;
@@ -618,10 +629,10 @@ const visibleRows = computed(() =>
 }
 .deposit-network-note > svg {
   flex-shrink: 0;
-  color: #658244;
+  color: #2563eb;
 }
 .deposit-network-note p {
-  color: #77826c;
+  color: #64748b;
   margin: 8px 0 0;
 }
 .deposit-summary {
@@ -629,13 +640,13 @@ const visibleRows = computed(() =>
   grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 16px;
   margin-top: 24px;
-  border-top: 1px solid #e6e9df;
+  border-top: 1px solid #e2e8f0;
   padding-top: 20px;
 }
 .deposit-summary span {
   display: block;
   font-size: 12px;
-  color: #7c8574;
+  color: #64748b;
   margin-bottom: 8px;
 }
 .deposit-summary strong {

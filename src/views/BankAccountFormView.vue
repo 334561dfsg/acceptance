@@ -421,7 +421,7 @@ async function submit() {
   display: flex;
   justify-content: flex-end;
   gap: 12px;
-  border-top: 1px solid #e8edde;
+  border-top: 1px solid #e2e8f0;
   margin-top: 28px;
   padding-top: 20px;
 }

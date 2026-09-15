@@ -251,7 +251,7 @@ const depositStatus = {
 .overview-tabs {
   display: flex;
   gap: 24px;
-  border-bottom: 1px solid #e7ebdf;
+  border-bottom: 1px solid #e2e8f0;
   margin-bottom: 20px;
 }
 .overview-tabs button {
@@ -262,17 +262,17 @@ const depositStatus = {
   min-width: 64px;
   font: inherit;
   font-size: 14px;
-  color: #818a77;
+  color: #64748b;
   cursor: pointer;
 }
 .overview-tabs button[aria-selected="true"] {
-  color: #334226;
-  border-bottom-color: #536b3b;
+  color: #1e293b;
+  border-bottom-color: #475569;
   font-weight: 600;
 }
 .overview-tabs button:focus-visible,
 [role="tabpanel"]:focus-visible {
-  outline: 2px solid #718956;
+  outline: 2px solid #475569;
   outline-offset: 3px;
 }
 
@@ -294,11 +294,11 @@ const depositStatus = {
   padding: 26px;
 }
 .overview-balance {
-  background: #f4f7ed;
+  background: #f8fafc;
 }
 .overview-coin {
   font-size: 25px;
-  color: #667c45;
+  color: #475569;
 }
 .overview-amount {
   font-size: clamp(26px, 3vw, 40px);
@@ -313,13 +313,13 @@ const depositStatus = {
   letter-spacing: 0;
 }
 .overview-frozen {
-  color: #7b8472;
+  color: #64748b;
   font-size: 13px;
 }
 .overview-frozen strong {
   margin-left: 16px;
   font-weight: 500;
-  color: #454e3d;
+  color: #1e293b;
 }
 .overview-actions {
   display: flex;
@@ -341,7 +341,7 @@ const depositStatus = {
   gap: 16px;
 }
 .overview-company dt {
-  color: #818a77;
+  color: #64748b;
   font-size: 13px;
 }
 .overview-company dd {
@@ -360,21 +360,21 @@ const depositStatus = {
 }
 .overview-table th {
   text-align: left;
-  color: #818a77;
+  color: #64748b;
   font-weight: 500;
-  background: #f8f9f5;
+  background: #f8fafc;
 }
 .overview-table td,
 .overview-table th {
   padding: 16px;
-  border-bottom: 1px solid #eef0e9;
+  border-bottom: 1px solid #e2e8f0;
 }
 .overview-empty {
   text-align: center;
   padding: 30px 16px;
 }
 .overview-empty p {
-  color: #88917e;
+  color: #64748b;
   font-size: 13px;
 }
 .overview-empty strong {

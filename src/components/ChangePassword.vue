@@ -112,7 +112,7 @@ async function submit() {
 </template>
 <style>
 .password-row {
-  border-top: 1px solid #e4e9dd;
+  border-top: 1px solid #e2e8f0;
   padding-top: 22px;
   margin-top: 24px;
 }

@@ -52,6 +52,6 @@ watch(
 .address-notice {
   margin: 12px 0 0;
   font-size: 12px;
-  color: #737e69;
+  color: #475569;
 }
 </style>

@@ -523,7 +523,7 @@ function nextKycStep() {
 .account-tabs {
   display: flex;
   gap: 28px;
-  border-bottom: 1px solid #dfe5da;
+  border-bottom: 1px solid #e2e8f0;
   margin-bottom: 24px;
 }
 .account-tabs button {
@@ -532,18 +532,18 @@ function nextKycStep() {
   border-bottom: 2px solid transparent;
   border-radius: 0;
   padding: 14px 0;
-  color: #78836f;
+  color: #64748b;
   font: inherit;
   font-size: 14px;
   cursor: pointer;
 }
 .account-tabs button[aria-selected="true"] {
-  color: #283d22;
-  border-bottom-color: #435f34;
+  color: #1e293b;
+  border-bottom-color: #1e293b;
   font-weight: 600;
 }
 .account-tabs button:focus-visible {
-  outline: 2px solid #7ba756;
+  outline: 2px solid #64748b;
   outline-offset: 3px;
 }
 .account-enterprise {
@@ -552,7 +552,7 @@ function nextKycStep() {
 .account-enterprise .onboard-progress {
   padding-bottom: 26px;
   margin-bottom: 28px;
-  border-bottom: 1px solid #e9ece5;
+  border-bottom: 1px solid #e2e8f0;
 }
 .account-enterprise .onboard-progress li {
   flex: 0 1 280px;
@@ -589,12 +589,12 @@ function nextKycStep() {
 }
 .account-enterprise .onboard-summary {
   padding-bottom: 24px;
-  border-bottom: 1px solid #e9ece5;
+  border-bottom: 1px solid #e2e8f0;
 }
 .account-enterprise .enterprise-account-info + .enterprise-account-info {
   padding-top: 24px;
   margin-top: 24px;
-  border-top: 1px solid #e9ece5;
+  border-top: 1px solid #e2e8f0;
 }
 #account-panel-security :deep(.security-settings) {
   margin-top: 0;
@@ -626,18 +626,18 @@ function nextKycStep() {
 .kyc-form-heading h2 {
   font-size: 21px;
   margin: 0 0 6px;
-  color: #293224;
+  color: #1e293b;
 }
 .kyc-form-heading p,
 .kyc-section-heading p {
-  color: #7b8573;
+  color: #64748b;
   font-size: 13px;
   line-height: 1.7;
   margin: 6px 0 0;
 }
 .kyc-step-count {
   font-size: 13px;
-  color: #78856a;
+  color: #64748b;
   white-space: nowrap;
 }
 .kyc-step-nav {
@@ -651,17 +651,17 @@ function nextKycStep() {
   gap: 12px;
   align-items: center;
   text-align: left;
-  border: 1px solid #e4e9df;
+  border: 1px solid #e2e8f0;
   border-radius: 10px;
   padding: 16px;
-  background: #fafbf8;
-  color: #7d8872;
+  background: #f8fafc;
+  color: #64748b;
   cursor: pointer;
 }
 .kyc-step-nav button.active {
-  background: #edf3e6;
-  border-color: #90a87a;
-  color: #344b27;
+  background: #eaf1fc;
+  border-color: #64748b;
+  color: #1e293b;
 }
 .kyc-step-number {
   display: grid;
@@ -669,11 +669,11 @@ function nextKycStep() {
   width: 30px;
   height: 30px;
   border-radius: 50%;
-  background: #e7ebdf;
+  background: #e2e8f0;
   flex-shrink: 0;
 }
 .active .kyc-step-number {
-  background: #425b32;
+  background: #1e293b;
   color: white;
 }
 .kyc-step-nav strong,
@@ -690,7 +690,7 @@ function nextKycStep() {
 }
 .kyc-section {
   padding: 24px;
-  border: 1px solid #e4e9df;
+  border: 1px solid #e2e8f0;
   border-radius: 10px;
   margin: 0 0 20px;
   background: #fff;
@@ -701,7 +701,7 @@ function nextKycStep() {
 .kyc-section-heading h3 {
   margin: 0;
   font-size: 15px;
-  color: #34432b;
+  color: #1e293b;
 }
 .kyc-address-heading {
   display: flex;
@@ -724,12 +724,12 @@ function nextKycStep() {
 .company-attributes legend {
   padding: 0;
   font-size: 13px;
-  color: #34432b;
+  color: #1e293b;
 }
 .company-attributes legend span {
   margin-left: 12px;
   font-size: 12px;
-  color: #7b8573;
+  color: #64748b;
 }
 .company-attribute-options {
   display: flex;
@@ -754,7 +754,7 @@ function nextKycStep() {
   min-height: 18px;
   padding: 0;
   margin: 0;
-  accent-color: #425b32;
+  accent-color: #1e293b;
   cursor: pointer;
 }
 .company-attribute-options label span {
@@ -762,7 +762,7 @@ function nextKycStep() {
 }
 .company-attributes p {
   margin: 4px 0 0;
-  color: #7b8573;
+  color: #64748b;
   font-size: 12px;
   line-height: 1.7;
 }
@@ -774,7 +774,7 @@ function nextKycStep() {
   grid-template-columns: minmax(0, 1fr);
 }
 .onboard-form .onboard-actions {
-  border-top: 1px solid #e4e9df;
+  border-top: 1px solid #e2e8f0;
   padding-top: 20px;
   gap: 12px;
 }

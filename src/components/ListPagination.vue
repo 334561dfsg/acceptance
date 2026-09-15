@@ -30,7 +30,7 @@ const pages = computed(() => Math.max(1, Math.ceil(props.total / size.value)));
   gap: 16px;
   align-items: center;
   margin-top: 20px;
-  color: #637059;
+  color: #475569;
   font-size: 12px;
 }
 .list-pagination > div {

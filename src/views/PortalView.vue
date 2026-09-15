@@ -9,7 +9,7 @@
       >
       <RouterLink to="/admin"
         ><h2>管理后台</h2>
-        <p>客户管理、交易审核与运营管理（待建设）</p></RouterLink
+        <p>客户账户、安全维护与操作记录</p></RouterLink
       >
     </div>
   </main>

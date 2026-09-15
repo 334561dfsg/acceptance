@@ -1,10 +1,10 @@
 /** Frontend fixtures only. No PayFi request, live wallet address, or actual funds.
  * Kept independent from views so the API adapter can replace this data source.
  */
-import { mvp, type BankAccount, type ExchangeOrder } from "./mvp";
-import { deposits, type Deposit } from "./deposit-mvp";
+import { mvp as liveMvp, type BankAccount, type ExchangeOrder } from "./mvp";
+import { deposits as liveDeposits, type Deposit } from "./deposit-mvp";
 import {
-  onboarding,
+  onboarding as liveOnboarding,
   materialKeys,
   extensions,
   type LocalMaterial,
@@ -17,7 +17,12 @@ const material = (name: string): LocalMaterial => ({
   fileNo: "FL_MOCK_" + name,
   sample: true,
 });
-export function seedMockData(email: string, now = Date.now()) {
+export function seedMockData(
+  email: string,
+  now = Date.now(),
+  target = { mvp: liveMvp, onboarding: liveOnboarding, deposits: liveDeposits },
+) {
+  const { mvp, onboarding, deposits } = target;
   if (
     email !== "demo@acceptance.example" ||
     mvp.merchant.no ||
@@ -69,7 +74,7 @@ export function seedMockData(email: string, now = Date.now()) {
   };
   Object.assign(onboarding.legal, person);
   onboarding.ubos = [{ ...person }];
-  for (const key of materialKeys())
+  for (const key of materialKeys(onboarding))
     onboarding.materials[key] = material(`${key}.${extensions(key)[0]}`);
   const specs = [
     [

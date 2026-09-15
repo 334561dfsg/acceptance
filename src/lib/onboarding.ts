@@ -161,16 +161,16 @@ export const materialNames: Record<string, string> = {
   EXTRA: "补充材料",
   BANK: "银行账户证明",
 };
-export const materialKeys = () => [
+export const materialKeys = (source = onboarding) => [
   "BR",
   "CI",
   "NNC1",
   "NAR",
   "BAP",
-  ...(onboarding.isForeignOwned ? ["SSC"] : []),
-  ...(!onboarding.company.business_site_url ? ["BUSINESS_DOCUMENT"] : []),
+  ...(source.isForeignOwned ? ["SSC"] : []),
+  ...(!source.company.business_site_url ? ["BUSINESS_DOCUMENT"] : []),
   "LEGAL_PP",
-  ...onboarding.ubos.map((_, i) => `UBO_${i}_PP`),
+  ...source.ubos.map((_, i) => `UBO_${i}_PP`),
 ];
 export const extensions = (kind: string) =>
   kind === "BANK"
