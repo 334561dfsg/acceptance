@@ -234,3 +234,29 @@ export async function resetCustomerPassword(email: string, password: string) {
   persistCredential(email);
   persistCustomers();
 }
+
+export function generateInitialPassword() {
+  const pick = (chars: string) => {
+    const limit = Math.floor(0x100000000 / chars.length) * chars.length;
+    let value: number;
+    do {
+      value = crypto.getRandomValues(new Uint32Array(1))[0]!;
+    } while (value >= limit);
+    return chars[value % chars.length]!;
+  };
+  const groups = [
+    "ABCDEFGHJKLMNPQRSTUVWXYZ",
+    "abcdefghijkmnpqrstuvwxyz",
+    "23456789",
+    "!@#$%&*?",
+  ];
+  const result = groups.map(pick);
+  const all = groups.join("");
+  while (result.length < 16) result.push(pick(all));
+  // Shuffle the required character groups into random positions.
+  for (let i = result.length - 1; i > 0; i--) {
+    const index = parseInt(pick("0123456789abcdef".slice(0, i + 1)), 16);
+    [result[i], result[index]] = [result[index]!, result[i]!];
+  }
+  return result.join("");
+}

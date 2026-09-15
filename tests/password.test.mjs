@@ -78,3 +78,22 @@ test("管理员新增、启停与重置密码联动登录且不泄露明文", as
   );
   assert.equal(c.mustChangePassword, false);
 });
+
+test("随机初始密码符合强度规则且可以创建登录账号", async () => {
+  const passwords = Array.from({ length: 100 }, () =>
+    p.generateInitialPassword(),
+  );
+  assert.equal(new Set(passwords).size, 100);
+  for (const value of passwords) {
+    assert.equal(value.length, 16);
+    assert.equal(p.passwordIssue(value), "");
+    assert.match(value, /[A-Z]/);
+    assert.match(value, /[a-z]/);
+  }
+  const account = await p.createCustomer(
+    "generated@example.com",
+    "",
+    passwords[0],
+  );
+  await p.checkPassword(account.email, passwords[0]);
+});

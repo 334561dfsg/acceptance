@@ -3,6 +3,7 @@ import { computed, ref, watch } from "vue";
 import { useRoute } from "vue-router";
 import {
   IconUsers,
+  IconCopy,
   IconHistory,
   IconPlus,
   IconArrowLeft,
@@ -14,6 +15,7 @@ import AppModal from "../components/AppModal.vue";
 import {
   customerAccounts,
   createCustomer,
+  generateInitialPassword,
   setCustomerEnabled,
   resetCustomerPassword,
   type CustomerAccount,
@@ -35,7 +37,6 @@ const modal = ref(""),
 const email = ref(""),
   contact = ref(""),
   password = ref(""),
-  confirmPassword = ref(""),
   reason = ref("");
 const dialog = ref<InstanceType<typeof AppModal>>();
 const record = ref<[string, string][]>([]);
@@ -73,7 +74,7 @@ const rows = computed(() =>
     const company = customerSnapshot(c.email).mvp.merchant.name;
     return (
       (!term ||
-        `${c.email} ${c.contact} ${c.id} ${company}`
+        `${c.email} ${c.contact} ${c.id} ${company} ${customerSnapshot(c.email).mvp.merchant.no}`
           .toLowerCase()
           .includes(term)) &&
       (filter.value === "all" || c.enabled === (filter.value === "active"))
@@ -105,6 +106,18 @@ watch(
 );
 const date = (value?: number) =>
   value ? new Date(value).toLocaleString("zh-CN", { hour12: false }) : "—";
+const merchantNumber = (c: CustomerAccount) =>
+  customerSnapshot(c.email).mvp.merchant.no;
+async function copyMerchant(c: CustomerAccount) {
+  const number = merchantNumber(c);
+  if (!number) return;
+  try {
+    await navigator.clipboard.writeText(number);
+    receipt.value = `商户号 ${number} 已复制。`;
+  } catch {
+    receipt.value = "复制失败，请选中商户号手动复制。";
+  }
+}
 const companyName = (c: CustomerAccount) =>
   customerSnapshot(c.email).mvp.merchant.name || "尚未创建企业";
 const channel = (c: CustomerAccount) => {
@@ -148,10 +161,30 @@ const detailPages = computed(() =>
 const detailEvents = computed(() =>
   adminState.events.filter((e) => e.email === selected.value?.email),
 );
+const passwordCopied = ref(false);
+function regeneratePassword() {
+  if (busy.value) return;
+  password.value = generateInitialPassword();
+  passwordCopied.value = false;
+}
+async function copyPassword() {
+  try {
+    await navigator.clipboard.writeText(
+      ["created", "resetdone"].includes(modal.value)
+        ? `登录邮箱：${email.value}\n${modal.value === "created" ? "初始密码" : "临时密码"}：${password.value}`
+        : password.value,
+    );
+    passwordCopied.value = true;
+  } catch {
+    error.value = "复制失败，请手动复制账号信息。";
+  }
+}
 const modalTitle = computed(
   () =>
     ({
       create: "新增客户",
+      created: "客户创建成功",
+      resetdone: "密码重置成功",
       disable: "停用客户账号",
       enable: "启用客户账号",
       password: "重置登录密码",
@@ -165,8 +198,10 @@ function open(action: string, c?: CustomerAccount) {
   error.value = "";
   email.value = "";
   contact.value = "";
-  password.value = "";
-  confirmPassword.value = "";
+  password.value = ["create", "password"].includes(action)
+    ? generateInitialPassword()
+    : "";
+  passwordCopied.value = false;
   reason.value = "";
 }
 function showRecord(values: [string, string][]) {
@@ -176,19 +211,11 @@ function showRecord(values: [string, string][]) {
 function closed() {
   modal.value = "";
   password.value = "";
-  confirmPassword.value = "";
   error.value = "";
 }
 async function submit() {
   if (busy.value) return;
   error.value = "";
-  if (
-    ["create", "password"].includes(modal.value) &&
-    password.value !== confirmPassword.value
-  ) {
-    error.value = "两次输入的密码不一致。";
-    return;
-  }
   if (modal.value !== "create" && !reason.value.trim()) {
     error.value = "请填写操作原因。";
     return;
@@ -208,6 +235,11 @@ async function submit() {
         "创建登录账号，首次登录须修改密码并绑定 MFA。",
       );
       receipt.value = `客户 ${added.email} 已创建，请通过安全渠道提供初始密码。`;
+      email.value = added.email;
+      modal.value = "created";
+      passwordCopied.value = false;
+      busy.value = false;
+      return;
     } else if (c) {
       const action = modal.value;
       if (action === "password")
@@ -218,9 +250,14 @@ async function submit() {
       const title = modalTitle.value;
       recordAdminAction(c.email, title, reason.value.trim());
       receipt.value = `${c.email}：${title}成功。`;
+      if (action === "password") {
+        email.value = c.email;
+        modal.value = "resetdone";
+        passwordCopied.value = false;
+        return;
+      }
     }
     password.value = "";
-    confirmPassword.value = "";
     busy.value = false;
     dialog.value?.close();
   } catch (e) {
@@ -283,26 +320,13 @@ async function submit() {
               <IconPlus :size="17" />新增客户
             </button>
           </div>
-          <div class="admin-stats">
-            <div>
-              <span>客户总数</span><strong>{{ customers.length }}</strong>
-            </div>
-            <div>
-              <span>正常账号</span
-              ><strong>{{ customers.filter((c) => c.enabled).length }}</strong>
-            </div>
-            <div>
-              <span>已停用</span
-              ><strong>{{ customers.filter((c) => !c.enabled).length }}</strong>
-            </div>
-          </div>
           <section class="panel admin-panel">
             <div class="admin-filters">
               <label
                 ><span class="sr-only">搜索客户</span
                 ><input
                   v-model="search"
-                  placeholder="搜索账号、企业名称或客户编号" /></label
+                  placeholder="搜索账号、企业名称、商户号或客户编号" /></label
               ><AppSelect
                 v-model="filter"
                 label="账号状态"
@@ -335,7 +359,24 @@ async function submit() {
                         >{{ c.email }}</RouterLink
                       ><small>{{ c.id }}</small>
                     </td>
-                    <td>{{ companyName(c) }}</td>
+                    <td>
+                      {{ companyName(c) }}
+                      <div v-if="merchantNumber(c)" class="merchant-number">
+                        <span
+                          >商户号：<code>{{ merchantNumber(c) }}</code></span
+                        >
+                        <button
+                          type="button"
+                          class="merchant-copy"
+                          :aria-label="'复制商户号 ' + merchantNumber(c)"
+                          title="复制商户号"
+                          @click="copyMerchant(c)"
+                        >
+                          <IconCopy :size="15" />
+                        </button>
+                      </div>
+                      <small v-else>商户号：尚未生成</small>
+                    </td>
                     <td>
                       <span
                         :class="['status', c.enabled ? 'success' : 'neutral']"
@@ -777,6 +818,26 @@ async function submit() {
           <dd>{{ value }}</dd>
         </div>
       </dl>
+      <div
+        v-else-if="['created', 'resetdone'].includes(modal)"
+        class="admin-operation"
+      >
+        <p>
+          {{ email }}
+          {{ modal === "created" ? "已创建成功。" : "登录密码已重置。" }}
+        </p>
+        <p v-if="error" class="mvp-error" role="alert">{{ error }}</p>
+        <label>
+          {{ modal === "created" ? "初始密码" : "临时密码"
+          }}<input :value="password" readonly class="generated-password"
+        /></label>
+        <button type="button" class="btn secondary" @click="copyPassword">
+          {{ passwordCopied ? "账号和密码已复制" : "复制账号和密码" }}
+        </button>
+        <p role="status" class="muted">
+          请保存并通过安全渠道告知客户。关闭后不再展示此密码。
+        </p>
+      </div>
       <form
         v-else
         id="admin-operation"
@@ -811,35 +872,36 @@ async function submit() {
         <p v-if="modal === 'mfa'" class="mvp-notice">
           重置后原验证器将失效，客户需重新登录并绑定 MFA。请先核实客户身份。
         </p>
-        <template v-if="modal === 'create' || modal === 'password'"
-          ><p v-if="modal === 'password'" class="mvp-notice">
-            原密码将失效，客户需使用临时密码登录并设置新密码。请先核实客户身份。
-          </p>
-          <label
-            >{{ modal === "create" ? "初始密码" : "临时密码" }}
-            <span class="required">*</span
-            ><input
-              v-model="password"
-              type="password"
-              required
-              minlength="12"
-              maxlength="128"
-              autocomplete="new-password"
-              :disabled="busy"
+        <p v-if="modal === 'password'" class="mvp-notice">
+          原密码将失效，客户需使用临时密码登录并设置新密码。请先核实客户身份。
+        </p>
+        <div
+          v-if="['create', 'password'].includes(modal)"
+          class="admin-operation"
+        >
+          <label>
+            {{ modal === "create" ? "初始密码" : "临时密码"
+            }}<input :value="password" readonly class="generated-password"
           /></label>
-          <p class="muted">
-            12–128 位，包含字母、数字和符号。请通过安全渠道告知客户。
-          </p>
-          <label
-            >确认密码 <span class="required">*</span
-            ><input
-              v-model="confirmPassword"
-              type="password"
-              required
-              maxlength="128"
-              autocomplete="new-password"
-              :disabled="busy" /></label
-        ></template>
+          <div class="generated-actions">
+            <button
+              type="button"
+              class="btn secondary"
+              :disabled="busy"
+              @click="regeneratePassword"
+            >
+              重新生成</button
+            ><button
+              type="button"
+              class="btn secondary"
+              :disabled="busy"
+              @click="copyPassword"
+            >
+              {{ passwordCopied ? "已复制" : "复制密码" }}
+            </button>
+          </div>
+          <p class="muted">自动生成 16 位密码，包含大小写字母、数字和符号。</p>
+        </div>
         <label v-if="modal !== 'create'"
           >操作原因 <span class="required">*</span
           ><textarea
@@ -858,9 +920,11 @@ async function submit() {
           :disabled="busy"
           @click="dialog?.close()"
         >
-          {{ modal === "record" ? "关闭" : "取消" }}</button
+          {{
+            ["record", "created", "resetdone"].includes(modal) ? "关闭" : "取消"
+          }}</button
         ><button
-          v-if="modal !== 'record'"
+          v-if="!['record', 'created', 'resetdone'].includes(modal)"
           type="submit"
           form="admin-operation"
           class="btn primary"
@@ -873,6 +937,40 @@ async function submit() {
   </div>
 </template>
 <style scoped>
+.merchant-number {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  color: #64748b;
+  margin-top: 4px;
+  font-size: 12px;
+}
+.merchant-number code {
+  font-family: ui-monospace, monospace;
+}
+.merchant-copy {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 32px;
+  min-height: 32px;
+  border-radius: 6px;
+  color: #64748b;
+}
+.merchant-copy:hover {
+  background: #eaf1fc;
+  color: #1d4ed8;
+}
+
+.generated-password {
+  font-family: ui-monospace, monospace;
+  letter-spacing: 1px;
+}
+.generated-actions {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+}
 .admin-shell {
   min-height: 100dvh;
   background: #f5f7fb;
@@ -938,27 +1036,6 @@ async function submit() {
   padding: 32px;
   max-width: 1800px;
   margin: auto;
-}
-.admin-stats {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 20px;
-  margin-bottom: 24px;
-}
-.admin-stats > div {
-  padding: 20px 24px;
-  border: 1px solid #e2e8f0;
-  border-radius: 10px;
-  background: white;
-}
-.admin-stats span {
-  color: #64748b;
-  font-size: 12px;
-}
-.admin-stats strong {
-  display: block;
-  font-size: 28px;
-  margin-top: 10px;
 }
 .admin-panel {
   padding: 24px;
@@ -1146,12 +1223,6 @@ async function submit() {
   }
   .admin-workspace main {
     padding: 20px;
-  }
-  .admin-stats {
-    gap: 10px;
-  }
-  .admin-stats > div {
-    padding: 16px;
   }
   .admin-panel {
     padding: 16px;
