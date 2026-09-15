@@ -393,3 +393,26 @@ test("Mock按账户初始化一次，金额对账且未创建真实充值地址"
   mock.seedMockData("demo@acceptance.example");
   assert.equal(deposits.length, 24);
 });
+
+test("香港企业地址限定地区并校验区域与分区对应关系", () => {
+  const fields = ob.addressFields("register_");
+  const valid = {
+    register_country: "HK",
+    register_state: "Kowloon",
+    register_city: "Kwun Tong",
+    register_postcode: "TEST",
+    register_line1: "Test address",
+  };
+  assert.equal(ob.fieldsIssue(valid, fields), "");
+  assert.ok(ob.fieldsIssue({ ...valid, register_country: "US" }, fields));
+  assert.ok(ob.fieldsIssue({ ...valid, register_city: "Wan Chai" }, fields));
+  assert.equal(ob.hkDistricts.length, 18);
+  assert.equal(ob.addressFields("register_", "Kowloon")[2].options.length, 5);
+  assert.equal(
+    ob.fieldsIssue(
+      { residential_country: "US" },
+      ob.addressFields("residential_").slice(0, 1),
+    ),
+    "",
+  );
+});

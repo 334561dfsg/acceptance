@@ -22,8 +22,17 @@ const fieldError = (f: Entry) =>
     >
       <label :for="id + f.key"
         >{{ f.label }}<span v-if="!f.optional" class="required"> *</span></label
-      ><AppSelect
-        v-if="f.options"
+      ><input
+        v-if="f.readonly"
+        :id="id + f.key"
+        readonly
+        :value="
+          f.options?.find((option) => option.value === model[f.key])?.label ||
+          model[f.key]
+        "
+      />
+      <AppSelect
+        v-else-if="f.options"
         :id="id + f.key"
         v-model="model[f.key]"
         :disabled="disabled"
@@ -47,9 +56,22 @@ const fieldError = (f: Entry) =>
         @blur="touched[f.key] = true"
         :autocomplete="f.type === 'date' ? 'off' : undefined"
       />
+      <p v-if="f.help" class="field-help">{{ f.help }}</p>
       <p v-if="fieldError(f)" :id="id + f.key + '-error'" class="field-error">
         {{ fieldError(f) }}
       </p>
     </div>
   </div>
 </template>
+
+<style scoped>
+.field-help {
+  margin: 8px 0 0;
+  color: var(--muted, #78816f);
+  font-size: 12px;
+  line-height: 1.6;
+}
+input[readonly] {
+  background: #f5f6f3;
+}
+</style>

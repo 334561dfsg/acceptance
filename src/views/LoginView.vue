@@ -149,7 +149,6 @@ async function login() {
       <form class="login-form" @submit.prevent="login">
         <div class="large-icon"><IconBuildingBank :size="28" /></div>
         <h2>欢迎回到客户系统</h2>
-        <p class="muted">进入您的企业资金工作空间</p>
         <div
           class="login-account-options"
           role="group"

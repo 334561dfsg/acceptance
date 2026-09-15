@@ -8,6 +8,8 @@ export interface Entry {
   max?: number;
   options?: Array<{ value: string; label: string }>;
   optional?: boolean;
+  readonly?: boolean;
+  help?: string;
 }
 export interface LocalMaterial {
   name: string;
@@ -15,13 +17,69 @@ export interface LocalMaterial {
   fileNo: string;
   sample: boolean;
 }
-export const addressFields = (prefix: string): Entry[] => [
-  { key: prefix + "country", label: "国家 / 地区", max: 2, options: countries },
-  { key: prefix + "state", label: "州 / 省 / 行政区", max: 32 },
-  { key: prefix + "city", label: "城市", max: 32 },
-  { key: prefix + "postcode", label: "邮编", max: 16 },
-  { key: prefix + "line1", label: "详细地址", max: 256 },
+// UI address taxonomy; API state/city remain free-text fields.
+export const hkRegions = [
+  { value: "Hong Kong Island", label: "香港岛" },
+  { value: "Kowloon", label: "九龙" },
+  { value: "New Territories", label: "新界" },
 ];
+export const hkDistricts = [
+  ["Hong Kong Island", "Central and Western", "中西区"],
+  ["Hong Kong Island", "Wan Chai", "湾仔区"],
+  ["Hong Kong Island", "Eastern", "东区"],
+  ["Hong Kong Island", "Southern", "南区"],
+  ["Kowloon", "Yau Tsim Mong", "油尖旺区"],
+  ["Kowloon", "Sham Shui Po", "深水埗区"],
+  ["Kowloon", "Kowloon City", "九龙城区"],
+  ["Kowloon", "Wong Tai Sin", "黄大仙区"],
+  ["Kowloon", "Kwun Tong", "观塘区"],
+  ["New Territories", "Kwai Tsing", "葵青区"],
+  ["New Territories", "Tsuen Wan", "荃湾区"],
+  ["New Territories", "Tuen Mun", "屯门区"],
+  ["New Territories", "Yuen Long", "元朗区"],
+  ["New Territories", "North", "北区"],
+  ["New Territories", "Tai Po", "大埔区"],
+  ["New Territories", "Sha Tin", "沙田区"],
+  ["New Territories", "Sai Kung", "西贡区"],
+  ["New Territories", "Islands", "离岛区"],
+] as const;
+export const addressFields = (prefix: string, region?: string): Entry[] => {
+  const hk = prefix === "register_" || prefix === "operation_";
+  return [
+    {
+      key: prefix + "country",
+      label: "国家 / 地区",
+      max: 2,
+      options: hk ? [{ value: "HK", label: "中国香港" }] : countries,
+      readonly: hk,
+    },
+    {
+      key: prefix + "state",
+      label: hk ? "区域" : "州 / 省 / 行政区",
+      max: 32,
+      options: hk ? hkRegions : undefined,
+    },
+    {
+      key: prefix + "city",
+      label: hk ? "分区" : "城市",
+      max: 32,
+      options: hk
+        ? hkDistricts
+            .filter(([parent]) => region === undefined || parent === region)
+            .map(([, value, label]) => ({ value, label }))
+        : undefined,
+    },
+    { key: prefix + "postcode", label: "邮编", max: 16 },
+    {
+      key: prefix + "line1",
+      label: hk ? "街道及楼宇地址" : "详细地址",
+      max: 256,
+      help: hk
+        ? "填写街道、门牌、楼宇、楼层及室号，与企业资料保持一致。"
+        : undefined,
+    },
+  ];
+};
 export const companyFields: Entry[] = [
   {
     key: "company_type",
@@ -39,10 +97,10 @@ export const companyFields: Entry[] = [
   { key: "company_registration_date", label: "注册日期", type: "date" },
   {
     key: "company_license_effective_date",
-    label: "执照起始日期",
+    label: "执照生效日期",
     type: "date",
   },
-  { key: "company_license_expiry_date", label: "执照失效日期", type: "date" },
+  { key: "company_license_expiry_date", label: "执照到期日期", type: "date" },
   {
     key: "business_site_url",
     label: "企业官网（不填写则须上传业务证明）",
@@ -158,6 +216,8 @@ export function createMerchant(name: string, email: string) {
   mvp.merchant.status = "ACTIVE";
   mvp.merchant.channel = "UNAVAILABLE";
   onboarding.company.company_name = name.trim();
+  onboarding.company.register_country = "HK";
+  onboarding.company.operation_country = "HK";
 }
 export function validDate(value: string) {
   if (!/^\d{4}-\d{2}-\d{2}$/.test(value)) return false;
@@ -180,6 +240,15 @@ export function fieldsIssue(data: Record<string, string>, fields: Entry[]) {
     if (!f.optional && !v.trim()) return "请填写" + f.label;
     if (f.max && v.length > f.max) return f.label + "超出长度限制";
     if (f.type === "date" && v && !validDate(v)) return f.label + "格式不正确";
+    if (
+      /^(register_|operation_)city$/.test(f.key) &&
+      v &&
+      !hkDistricts.some(
+        ([parent, district]) =>
+          district === v && parent === data[f.key.replace("city", "state")],
+      )
+    )
+      return "请选择所属区域内的分区";
     if (f.options && v && !f.options.some((o) => o.value === v))
       return "请选择" + f.label;
     if (f.key.endsWith("country") && v && !/^[A-Z]{2}$/.test(v))
@@ -368,8 +437,8 @@ export function sampleKyc() {
   for (const prefix of ["register_", "operation_"])
     for (const [k, v] of Object.entries({
       country: "HK",
-      state: "Hong Kong",
-      city: "Hong Kong",
+      state: "Kowloon",
+      city: "Kwun Tong",
       postcode: "000000",
       line1: "DEMO ADDRESS ONLY",
     }))

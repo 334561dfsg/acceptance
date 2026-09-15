@@ -52,3 +52,32 @@ test("cancelled challenge never authorizes and repeated failures throttle", asyn
   await assert.rejects(m.verifyMfa("challenge@example.com", "bad"), /一分钟/);
   m.removeMfa("challenge@example.com");
 });
+
+test("通用验证码仅本地开发的两个原型账户可用", async () => {
+  const devJs = ts.transpileModule(
+    source.replace("import.meta.env?.DEV", "true"),
+    {
+      compilerOptions: {
+        module: ts.ModuleKind.ESNext,
+        target: ts.ScriptTarget.ES2022,
+      },
+    },
+  ).outputText;
+  const dev = await import(
+    "data:text/javascript;base64," + Buffer.from(devJs).toString("base64")
+  );
+  for (const email of ["demo@acceptance.example", "empty@acceptance.example"]) {
+    await dev.bindMfa(email, dev.createSecret(), "123456");
+    for (let i = 0; i < 5; i++)
+      await assert.rejects(dev.verifyMfa(email, "bad"));
+    await dev.verifyMfa(email, "123456");
+    await dev.verifyMfa(email, "123456");
+    dev.removeMfa(email);
+  }
+  await assert.rejects(
+    dev.bindMfa("other@example.com", dev.createSecret(), "123456"),
+  );
+  await assert.rejects(
+    m.bindMfa("demo@acceptance.example", m.createSecret(), "123456"),
+  );
+});

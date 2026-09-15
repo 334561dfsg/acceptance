@@ -6,7 +6,7 @@ import {
 } from "../lib/payfi-rules";
 import SecuritySettings from "../components/SecuritySettings.vue";
 import AppSelect from "../components/AppSelect.vue";
-import { computed, ref, nextTick } from "vue";
+import { computed, ref, nextTick, watch } from "vue";
 import { IconCheck, IconClock, IconArrowRight } from "@tabler/icons-vue";
 import industries from "../lib/industries.json";
 import { mvp } from "../lib/mvp";
@@ -23,6 +23,7 @@ import {
   fieldsIssue,
 } from "../lib/onboarding";
 import OnboardingFields from "../components/OnboardingFields.vue";
+import HongKongAddressFields from "../components/HongKongAddressFields.vue";
 import MaterialInput from "../components/MaterialInput.vue";
 const accountTab = ref("company");
 const accountTabs = [
@@ -44,10 +45,28 @@ function switchTab(event: KeyboardEvent, index: number) {
     ?.querySelectorAll<HTMLButtonElement>('[role="tab"]')
     [next]?.focus();
 }
+const kycHeading = ref<HTMLElement>();
+const kycSteps = [
+  { key: "company", title: "企业信息", description: "基本资料与经营地址" },
+  { key: "people", title: "法人及受益人", description: "身份信息与持有人资料" },
+  { key: "materials", title: "证明材料", description: "上传文件并提交审核" },
+];
+function copyRegisteredAddress() {
+  for (const field of addressFields("register_")) {
+    o.company[field.key.replace("register_", "operation_")] =
+      o.company[field.key] || "";
+  }
+}
 const errorElement = ref<HTMLElement>();
 const name = ref(""),
   error = ref(""),
   tab = ref("company");
+watch(tab, async () => {
+  error.value = "";
+  await nextTick();
+  kycHeading.value?.focus({ preventScroll: true });
+  kycHeading.value?.scrollIntoView({ block: "start", behavior: "auto" });
+});
 const stage = computed(() =>
   accountStage(mvp.merchant.no, mvp.merchant.channel),
 );
@@ -113,6 +132,7 @@ function nextKycStep() {
     <div class="page-heading">
       <div>
         <h1>账户信息</h1>
+        <p>管理企业认证资料与账户安全设置。</p>
       </div>
     </div>
     <div class="account-tabs" role="tablist" aria-label="账户设置">
@@ -200,68 +220,119 @@ function nextKycStep() {
         <template v-if="stage === 1"
           ><div v-if="o.kycReason" class="mvp-error">{{ o.kycReason }}</div>
           <section class="panel onboard-form">
-            <div class="section-heading">
-              <h2>企业认证资料</h2>
-            </div>
-            <p class="mvp-caption">支持香港企业，法人及受益人使用护照材料。</p>
-            <div class="mvp-tabs" role="group" aria-label="认证资料步骤">
-              <button
-                v-for="(v, k) in {
-                  company: '企业信息',
-                  people: '法人及受益人',
-                  materials: '证明材料',
-                }"
-                :key="k"
-                :class="{ selected: tab === k }"
-                :aria-pressed="tab === k"
-                @click="tab = k"
-              >
-                {{ v }}
-              </button>
-            </div>
-            <div v-show="tab === 'company'">
-              <OnboardingFields
-                v-model="o.company"
-                :fields="companyFields"
-                :disabled="!kycEditable"
-              /><label class="onboard-industry"
-                >所属行业<AppSelect
-                  v-model="o.industry"
-                  label="所属行业"
-                  searchable
-                  :disabled="!kycEditable"
-                  :options="industries"
-              /></label>
-              <div class="onboard-checks">
-                <label
-                  ><input v-model="o.isListed" type="checkbox" />上市公司</label
-                ><label
-                  ><input
-                    v-model="o.isStateOwned"
-                    type="checkbox"
-                  />国有企业</label
-                ><label
-                  ><input
-                    v-model="o.isForeignOwned"
-                    type="checkbox"
-                  />存在外资或境外企业股东（须补充股权结构图）</label
-                >
+            <div class="kyc-form-heading" ref="kycHeading" tabindex="-1">
+              <div>
+                <h2>企业认证</h2>
+                <p>
+                  请按企业注册文件填写，带
+                  <span class="required">*</span> 的项目为必填。
+                </p>
               </div>
-              <h3>企业注册地址</h3>
-              <OnboardingFields
-                v-model="o.company"
-                :fields="addressFields('register_')"
-              />
-              <h3>企业运营地址</h3>
-              <OnboardingFields
-                v-model="o.company"
-                :fields="addressFields('operation_')"
-              />
+              <span class="kyc-step-count"
+                >{{ kycSteps.findIndex((step) => step.key === tab) + 1 }} /
+                3</span
+              >
+            </div>
+            <nav class="kyc-step-nav" aria-label="认证资料步骤">
+              <button
+                v-for="(step, i) in kycSteps"
+                :key="step.key"
+                type="button"
+                :class="{ active: tab === step.key }"
+                :aria-current="tab === step.key ? 'step' : undefined"
+                @click="tab = step.key"
+              >
+                <span class="kyc-step-number">{{ i + 1 }}</span
+                ><span
+                  ><strong>{{ step.title }}</strong
+                  ><small>{{ step.description }}</small></span
+                >
+              </button>
+            </nav>
+            <div v-show="tab === 'company'">
+              <section class="kyc-section">
+                <div class="kyc-section-heading">
+                  <h3>企业基本信息</h3>
+                  <p>企业名称、注册信息应与注册文件一致。</p>
+                </div>
+                <OnboardingFields
+                  v-model="o.company"
+                  :fields="companyFields"
+                  :disabled="!kycEditable"
+                /><label class="onboard-industry"
+                  >所属行业<AppSelect
+                    v-model="o.industry"
+                    label="所属行业"
+                    searchable
+                    :disabled="!kycEditable"
+                    :options="industries"
+                /></label>
+                <fieldset class="company-attributes" :disabled="!kycEditable">
+                  <legend>企业属性 <span>请勾选符合的情况</span></legend>
+                  <div class="company-attribute-options">
+                    <label
+                      ><input v-model="o.isListed" type="checkbox" /><span
+                        >上市公司</span
+                      ></label
+                    >
+                    <label
+                      ><input v-model="o.isStateOwned" type="checkbox" /><span
+                        >国有企业</span
+                      ></label
+                    >
+                    <label
+                      ><input
+                        v-model="o.isForeignOwned"
+                        type="checkbox"
+                        aria-describedby="foreign-owned-help"
+                      /><span>有外资或境外企业股东</span></label
+                    >
+                  </div>
+                  <p id="foreign-owned-help">
+                    有外资或境外企业股东的企业，需上传股权结构图。
+                  </p>
+                </fieldset>
+              </section>
+              <section class="kyc-section">
+                <div class="kyc-section-heading">
+                  <h3>企业注册地址</h3>
+                  <p>填写企业注册文件上登记的完整地址。</p>
+                </div>
+                <HongKongAddressFields v-model="o.company" prefix="register_" />
+              </section>
+              <section class="kyc-section">
+                <div class="kyc-section-heading kyc-address-heading">
+                  <div>
+                    <h3>企业运营地址</h3>
+                    <p>填写企业实际开展业务的地址。</p>
+                  </div>
+                  <button
+                    type="button"
+                    class="btn secondary"
+                    @click="copyRegisteredAddress"
+                  >
+                    复制注册地址
+                  </button>
+                </div>
+                <HongKongAddressFields
+                  v-model="o.company"
+                  prefix="operation_"
+                />
+              </section>
             </div>
             <div v-show="tab === 'people'">
-              <h3>法人 / 董事长 · 护照认证</h3>
-              <OnboardingFields v-model="o.legal" :fields="personFields" />
-              <section v-for="(u, i) in o.ubos" :key="i" class="onboard-person">
+              <section class="kyc-section">
+                <div class="kyc-section-heading">
+                  <h3>法人 / 董事长</h3>
+                  <p>请填写与护照一致的姓名和身份资料。</p>
+                </div>
+                <OnboardingFields v-model="o.legal" :fields="personFields" />
+              </section>
+              <section
+                v-for="(u, i) in o.ubos"
+                :key="i"
+                class="onboard-person kyc-section"
+              >
                 <div class="section-heading">
                   <h3>最终受益人 {{ i + 1 }} · 护照认证</h3>
                   <button
@@ -286,25 +357,41 @@ function nextKycStep() {
                 添加受益人（{{ o.ubos.length }}/10）
               </button>
             </div>
-            <div v-show="tab === 'materials'" class="onboard-materials">
-              <MaterialInput
-                v-for="k in materialKeys()"
-                :key="k"
-                v-model="o.materials[k]"
-                :kind="k"
-                :label="
-                  materialNames[k] ||
-                  `受益人 ${Number(k.split('_')[1]) + 1} 护照`
-                "
-              /><MaterialInput
-                v-if="o.kycReason"
-                v-model="o.materials.EXTRA"
-                kind="EXTRA"
-                label="补充材料（选填）"
-              />
+            <div v-show="tab === 'materials'" class="kyc-material-step">
+              <div class="kyc-section-heading">
+                <h3>上传认证文件</h3>
+                <p>
+                  按以下项目准备清晰、完整的文件。具体格式和大小要求见各上传区域。
+                </p>
+              </div>
+              <div class="onboard-materials">
+                <MaterialInput
+                  v-for="k in materialKeys()"
+                  :key="k"
+                  v-model="o.materials[k]"
+                  :kind="k"
+                  :label="
+                    materialNames[k] ||
+                    `受益人 ${Number(k.split('_')[1]) + 1} 护照`
+                  "
+                /><MaterialInput
+                  v-if="o.kycReason"
+                  v-model="o.materials.EXTRA"
+                  kind="EXTRA"
+                  label="补充材料（选填）"
+                />
+              </div>
             </div>
             <div class="onboard-actions">
-              <p>带 * 的字段及必需证明材料需完整填写。切换步骤保留本次草稿。</p>
+              <p>切换步骤会保留本次填写内容。</p>
+              <button
+                v-if="tab !== 'company'"
+                type="button"
+                class="btn secondary"
+                @click="tab = tab === 'materials' ? 'people' : 'company'"
+              >
+                上一步
+              </button>
               <button
                 v-if="tab !== 'materials'"
                 class="btn primary"
@@ -523,6 +610,205 @@ function nextKycStep() {
   .account-enterprise .onboard-progress {
     padding-bottom: 20px;
     margin-bottom: 22px;
+  }
+}
+</style>
+
+<style scoped>
+.kyc-form-heading {
+  display: flex;
+  justify-content: space-between;
+  gap: 20px;
+  align-items: center;
+  margin: 28px 0 24px;
+  scroll-margin-top: 24px;
+}
+.kyc-form-heading h2 {
+  font-size: 21px;
+  margin: 0 0 6px;
+  color: #293224;
+}
+.kyc-form-heading p,
+.kyc-section-heading p {
+  color: #7b8573;
+  font-size: 13px;
+  line-height: 1.7;
+  margin: 6px 0 0;
+}
+.kyc-step-count {
+  font-size: 13px;
+  color: #78856a;
+  white-space: nowrap;
+}
+.kyc-step-nav {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px;
+  margin-bottom: 28px;
+}
+.kyc-step-nav button {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  text-align: left;
+  border: 1px solid #e4e9df;
+  border-radius: 10px;
+  padding: 16px;
+  background: #fafbf8;
+  color: #7d8872;
+  cursor: pointer;
+}
+.kyc-step-nav button.active {
+  background: #edf3e6;
+  border-color: #90a87a;
+  color: #344b27;
+}
+.kyc-step-number {
+  display: grid;
+  place-items: center;
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  background: #e7ebdf;
+  flex-shrink: 0;
+}
+.active .kyc-step-number {
+  background: #425b32;
+  color: white;
+}
+.kyc-step-nav strong,
+.kyc-step-nav small {
+  display: block;
+}
+.kyc-step-nav strong {
+  font-size: 14px;
+}
+.kyc-step-nav small {
+  margin-top: 5px;
+  font-size: 12px;
+  font-weight: normal;
+}
+.kyc-section {
+  padding: 24px;
+  border: 1px solid #e4e9df;
+  border-radius: 10px;
+  margin: 0 0 20px;
+  background: #fff;
+}
+.kyc-section-heading {
+  margin-bottom: 22px;
+}
+.kyc-section-heading h3 {
+  margin: 0;
+  font-size: 15px;
+  color: #34432b;
+}
+.kyc-address-heading {
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+  align-items: center;
+}
+.kyc-section :deep(.onboard-fields) {
+  gap: 20px 28px;
+}
+.kyc-section :deep(label) {
+  line-height: 1.7;
+}
+.company-attributes {
+  min-width: 0;
+  border: 0;
+  padding: 0;
+  margin: 24px 0 0;
+}
+.company-attributes legend {
+  padding: 0;
+  font-size: 13px;
+  color: #34432b;
+}
+.company-attributes legend span {
+  margin-left: 12px;
+  font-size: 12px;
+  color: #7b8573;
+}
+.company-attribute-options {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 32px;
+  margin-top: 8px;
+}
+.company-attribute-options label {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  min-height: 44px;
+  margin: 0;
+  cursor: pointer;
+  font-size: 13px;
+}
+.company-attribute-options input[type="checkbox"] {
+  flex: 0 0 18px;
+  width: 18px;
+  height: 18px;
+  min-width: 18px;
+  min-height: 18px;
+  padding: 0;
+  margin: 0;
+  accent-color: #425b32;
+  cursor: pointer;
+}
+.company-attribute-options label span {
+  white-space: nowrap;
+}
+.company-attributes p {
+  margin: 4px 0 0;
+  color: #7b8573;
+  font-size: 12px;
+  line-height: 1.7;
+}
+.company-attributes:disabled label,
+.company-attributes:disabled input {
+  cursor: default;
+}
+.kyc-material-step .onboard-materials {
+  grid-template-columns: minmax(0, 1fr);
+}
+.onboard-form .onboard-actions {
+  border-top: 1px solid #e4e9df;
+  padding-top: 20px;
+  gap: 12px;
+}
+.onboard-actions p {
+  margin-right: auto;
+}
+@media (max-width: 760px) {
+  .kyc-step-nav {
+    gap: 6px;
+  }
+  .kyc-step-nav button {
+    padding: 12px 6px;
+    flex-direction: column;
+    text-align: center;
+    gap: 8px;
+  }
+  .kyc-step-nav small {
+    display: none;
+  }
+  .kyc-step-nav strong {
+    font-size: 12px;
+  }
+  .kyc-section {
+    padding: 18px 14px;
+  }
+  .kyc-address-heading {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+  .onboard-form .onboard-actions {
+    flex-wrap: wrap;
+  }
+  .onboard-actions p {
+    width: 100%;
   }
 }
 </style>

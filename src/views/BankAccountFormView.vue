@@ -6,7 +6,14 @@ import OnboardingFields from "../components/OnboardingFields.vue";
 import MaterialInput from "../components/MaterialInput.vue";
 import { mvp, type BankAccount } from "../lib/mvp";
 import { bankTemplate, submitAccount } from "../lib/banks";
-import { onboarding, type LocalMaterial, fieldsIssue } from "../lib/onboarding";
+import {
+  onboarding,
+  hkRegions,
+  hkDistricts,
+  type Entry,
+  type LocalMaterial,
+  fieldsIssue,
+} from "../lib/onboarding";
 import { requestMfa } from "../lib/mfa";
 import { demo } from "../lib/store";
 const route = useRoute(),
@@ -27,6 +34,98 @@ const mode = ref(""),
 const template = computed(() =>
   bankTemplate(country.value, routing.value, relationship.value),
 );
+const bankOptions = [
+  {
+    value: "The Hongkong and Shanghai Banking Corporation Limited",
+    label: "汇丰银行 HSBC",
+    swift: "HSBCHKHHHKH",
+  },
+  {
+    value: "Hang Seng Bank Limited",
+    label: "恒生银行 Hang Seng",
+    swift: "HASEHKHH",
+  },
+  {
+    value: "Bank of China (Hong Kong) Limited",
+    label: "中国银行（香港）",
+    swift: "",
+  },
+];
+const bankSelection = computed(() =>
+  bankOptions.some((b) => b.value === fields.value["b.bank_name"])
+    ? fields.value["b.bank_name"]!
+    : fields.value["b.bank_name"]
+      ? "OTHER"
+      : "",
+);
+const customBank = ref(false);
+const addressNotice = ref("");
+function selectBank(value: string) {
+  if (busy.value) return;
+  customBank.value = value === "OTHER";
+  const bank = bankOptions.find((b) => b.value === value);
+  fields.value["b.bank_name"] = bank?.value || "";
+  fields.value["b.swift_code"] = bank?.swift || "";
+  fields.value["b.bank_code"] = "";
+  fields.value["b.branch_code"] = "";
+  fields.value["b.province"] = "";
+  fields.value["b.city"] = "";
+  fields.value["b.bank_address"] = "";
+  addressNotice.value =
+    "已切换银行，请核对 SWIFT / BIC，并重新填写适用的银行及分行代码。";
+}
+function hongKongField(f: Entry): Entry {
+  if (f.key === "p.payee_country")
+    return {
+      ...f,
+      readonly: true,
+      options: [{ value: "HK", label: "中国香港" }],
+    };
+  const prefix = f.key.slice(0, 2);
+  if (f.key.endsWith(".province"))
+    return {
+      ...f,
+      label: prefix === "p." ? "收款企业区域" : "开户行区域",
+      options: hkRegions,
+    };
+  if (f.key.endsWith(".city")) {
+    const hasRegion = template.value.some(
+      (item) => item.key === prefix + "province",
+    );
+    const region = fields.value[prefix + "province"];
+    return {
+      ...f,
+      label: prefix === "p." ? "收款企业分区" : "开户行分区",
+      options: hkDistricts
+        .filter(([parent]) => !hasRegion || !region || parent === region)
+        .map(([, value, label]) => ({ value, label })),
+    };
+  }
+  return f;
+}
+const displayTemplate = computed(() => template.value.map(hongKongField));
+// Synchronous local address dependency; optional/missing province permits all districts.
+// Keep loaded legacy values visible as invalid until corrected; only user region changes reset city.
+for (const prefix of ["p.", "b."]) {
+  watch(
+    () => fields.value[prefix + "province"],
+    (region, previous) => {
+      if (mode.value !== "form" || region === previous) return;
+      const city = fields.value[prefix + "city"];
+      if (
+        region &&
+        city &&
+        !hkDistricts.some(
+          ([parent, district]) => parent === region && district === city,
+        )
+      ) {
+        fields.value[prefix + "city"] = "";
+        addressNotice.value = "区域已变更，请重新选择对应分区。";
+      }
+    },
+    { flush: "sync" },
+  );
+}
 const allowed = computed(
   () =>
     mvp.merchant.channel === "AVAILABLE" &&
@@ -38,7 +137,18 @@ const relationshipDrafts = new Map<
 >();
 function initialFields(value: string): Record<string, string> {
   const name = onboarding.company.company_name_en?.trim();
-  return value === "SELF" && name ? { "b.account_name": name } : {};
+  if (value !== "SELF") return { "p.payee_country": "HK" };
+  const company = onboarding.company;
+  return {
+    "b.account_name": name || "",
+    "p.payee_country": "HK",
+    "p.province":
+      company.register_country === "HK" ? company.register_state || "" : "",
+    "p.city":
+      company.register_country === "HK" ? company.register_city || "" : "",
+    "p.post_code":
+      company.register_country === "HK" ? company.register_postcode || "" : "",
+  };
 }
 watch(
   relationship,
@@ -48,6 +158,8 @@ watch(
       fields: { ...fields.value },
       material: material.value,
     });
+    customBank.value = false;
+    addressNotice.value = "";
     const draft = relationshipDrafts.get(value);
     fields.value = draft ? { ...draft.fields } : initialFields(value);
     material.value = draft?.material;
@@ -60,6 +172,8 @@ watch(routing, () => {
 });
 function open(b?: BankAccount) {
   mode.value = "";
+  customBank.value = false;
+  addressNotice.value = "";
   relationshipDrafts.clear();
   selected.value = b;
   country.value = b?.country || "HK";
@@ -107,7 +221,7 @@ onBeforeRouteLeave(() => {
 });
 async function submit() {
   if (!allowed.value) return;
-  const issue = fieldsIssue(fields.value, template.value);
+  const issue = fieldsIssue(fields.value, displayTemplate.value);
   if (issue) {
     error.value = issue;
     return;
@@ -200,15 +314,43 @@ async function submit() {
         </section>
         <section class="bank-form-section">
           <h3>收款企业信息</h3>
+          <p v-if="relationship === 'SELF' && !selected" class="mvp-caption">
+            已带入企业认证的注册地址信息，可按银行账户证明核对调整。
+          </p>
+          <p class="mvp-caption">
+            区域与分区按香港地址选择；邮编请按银行要求填写。
+          </p>
           <OnboardingFields
             :key="relationship + routing"
             v-model="fields"
-            :fields="template.filter((f) => f.key.startsWith('p.'))"
+            :fields="displayTemplate.filter((f) => f.key.startsWith('p.'))"
             :disabled="busy"
           />
         </section>
         <section class="bank-form-section">
           <h3>银行账户信息</h3>
+          <label class="bank-picker"
+            >收款银行 <span class="required">*</span>
+            <AppSelect
+              :model-value="customBank ? 'OTHER' : bankSelection"
+              @update:model-value="selectBank"
+              label="收款银行"
+              searchable
+              :disabled="busy"
+              :options="[
+                { value: '', label: '请选择银行' },
+                ...bankOptions,
+                { value: 'OTHER', label: '其他银行（手动填写）' },
+              ]"
+            />
+          </label>
+          <p class="mvp-caption">
+            选择银行后带入名称及已核实的 SWIFT /
+            BIC，请以银行账户证明为准。银行账号及分行代码需自行填写。
+          </p>
+          <p v-if="addressNotice" class="mvp-caption" role="status">
+            {{ addressNotice }}
+          </p>
           <p
             v-if="relationship === 'SELF' && onboarding.company.company_name_en"
             class="mvp-caption"
@@ -218,7 +360,15 @@ async function submit() {
           <OnboardingFields
             :key="relationship + routing"
             v-model="fields"
-            :fields="template.filter((f) => f.key.startsWith('b.'))"
+            :fields="
+              displayTemplate.filter(
+                (f) =>
+                  f.key.startsWith('b.') &&
+                  (f.key !== 'b.bank_name' ||
+                    customBank ||
+                    bankSelection === 'OTHER'),
+              )
+            "
             :disabled="busy"
           />
         </section>
@@ -254,6 +404,13 @@ async function submit() {
   </div>
 </template>
 <style scoped>
+.bank-picker {
+  display: block;
+  margin-bottom: 12px;
+}
+.bank-picker :deep(.app-select) {
+  margin-top: 8px;
+}
 .bank-account-page {
   padding: 28px;
   width: 100%;
@@ -269,6 +426,13 @@ async function submit() {
   padding-top: 20px;
 }
 @media (max-width: 640px) {
+  .bank-picker {
+    display: block;
+    margin-bottom: 12px;
+  }
+  .bank-picker :deep(.app-select) {
+    margin-top: 8px;
+  }
   .bank-account-page {
     padding: 18px;
   }
