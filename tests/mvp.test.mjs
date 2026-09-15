@@ -236,11 +236,10 @@ function addBank(
   );
   return mvp.banks[0];
 }
-test("六种对公银行场景，拒绝不支持的通道并过滤非模板字段", () => {
+test("中国香港四种对公银行场景，拒绝其他地区并过滤非模板字段", () => {
   for (const [country, routing] of [
     ["HK", "SWIFT"],
     ["HK", "RTGS"],
-    ["US", "SWIFT"],
   ]) {
     for (const relationship of ["SELF", "THIRD_PARTY"]) {
       const b = addBank(relationship, country + routing, country, routing);
@@ -253,7 +252,8 @@ test("六种对公银行场景，拒绝不支持的通道并过滤非模板字�
       );
     }
   }
-  assert.equal(mvp.banks.length, 6);
+  assert.equal(mvp.banks.length, 4);
+  assert.throws(() => addBank("SELF", "us-bank", "US", "SWIFT"), /中国香港/);
   assert.deepEqual(banks.bankTemplate("US", "RTGS", "SELF"), []);
   assert.deepEqual(banks.bankTemplate("HK", "OTHER", "SELF"), []);
 });

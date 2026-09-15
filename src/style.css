@@ -3507,3 +3507,37 @@ input[aria-invalid="true"] {
 .payout-dialog-form .mvp-result {
   overflow-wrap: anywhere;
 }
+
+.modal.modal-wide {
+  width: min(880px, calc(100% - 32px));
+}
+.bank-account-form .bank-form-intro {
+  margin: 0 0 24px;
+  color: #7c8574;
+  font-size: 13px;
+}
+.bank-form-section + .bank-form-section {
+  border-top: 1px solid #e8edde;
+  margin-top: 24px;
+  padding-top: 24px;
+}
+.bank-form-section h3 {
+  margin: 0 0 18px;
+  font-size: 14px;
+  color: #303a29;
+}
+.bank-account-form .onboard-fields {
+  gap: 18px 24px;
+}
+.bank-account-form .bank-scenario-fields {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+.bank-account-form input[readonly] {
+  background: #f5f7f1;
+  color: #717b66;
+}
+@media (max-width: 640px) {
+  .bank-account-form .onboard-fields {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}

@@ -95,6 +95,7 @@ export function submitAccount(
   material: LocalMaterial | undefined,
   existing?: BankAccount,
 ) {
+  if (country !== "HK") throw new Error("目前仅支持中国香港的银行账户");
   if (mvp.merchant.channel !== "AVAILABLE")
     throw new Error("请先完成企业认证并开通支付通道");
   if (existing && existing.status !== "DECLINED")
@@ -129,8 +130,6 @@ export function submitAccount(
     throw new Error("账号应为3至33位字母或数字（实际规则以服务端模板为准）");
   if (!/^[A-Z]{6}[A-Z0-9]{2}([A-Z0-9]{3})?$/.test(fields["b.swift_code"] || ""))
     throw new Error("请填写8或11位SWIFT代码");
-  if (country === "US" && !/^\d{9}$/.test(fields["b.routing_value"] || ""))
-    throw new Error("Routing Number须为9位数字");
   if (!material) throw new Error("请添加银行账户证明");
   const fileError = materialIssue(material, "BANK");
   if (fileError) throw new Error(fileError);

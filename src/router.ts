@@ -41,6 +41,16 @@ const router = createRouter({
           meta: { title: "付款订单", page: "orders" },
         },
         {
+          path: "accounts/new",
+          component: () => import("./views/BankAccountFormView.vue"),
+          meta: { title: "添加银行账户" },
+        },
+        {
+          path: "accounts/:id/edit",
+          component: () => import("./views/BankAccountFormView.vue"),
+          meta: { title: "修改银行资料" },
+        },
+        {
           path: "accounts",
           component: () => import("./views/BankAccountsView.vue"),
           meta: { title: "收款账户" },

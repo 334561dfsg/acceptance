@@ -83,11 +83,11 @@ export function seedMockData(email: string, now = Date.now()) {
     ],
     [
       "THIRD_PARTY",
-      "US",
+      "HK",
       "SWIFT",
       "APPROVED",
-      "NORTHSTAR TECHNOLOGY INC.",
-      "Pacific Commercial Bank",
+      "NORTHSTAR TECHNOLOGY LIMITED",
+      "海港商业银行",
       "200055667890",
     ],
     [

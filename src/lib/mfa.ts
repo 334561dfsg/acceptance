@@ -1,5 +1,5 @@
 import { reactive } from "vue";
-// Prototype only: secrets remain in memory. Production verification and storage belong on the server.
+// Prototype only: tab-scoped storage retains MFA across reloads. Production secrets belong on the server.
 interface AccountMfa {
   secret: string;
   boundAt: number;
@@ -8,6 +8,33 @@ interface AccountMfa {
   blockedUntil: number;
 }
 const accounts = new Map<string, AccountMfa>();
+const storageKey = "acceptance.mfa.v1";
+try {
+  const saved = JSON.parse(sessionStorage.getItem(storageKey) || "[]");
+  if (Array.isArray(saved))
+    for (const [email, value] of saved) {
+      if (
+        typeof email === "string" &&
+        /^[A-Z2-7]{32}$/.test(value?.secret) &&
+        [
+          value.boundAt,
+          value.lastStep,
+          value.failures,
+          value.blockedUntil,
+        ].every(Number.isFinite)
+      )
+        accounts.set(email, value);
+    }
+} catch {
+  /* Invalid storage never creates a binding. */
+}
+function persistMfa() {
+  try {
+    sessionStorage.setItem(storageKey, JSON.stringify([...accounts]));
+  } catch {
+    /* Retain in-memory behavior. */
+  }
+}
 export const mfaVersion = reactive({ value: 0 });
 const key = (email: string) => email.trim().toLowerCase();
 export function mfaInfo(email: string) {
@@ -81,6 +108,7 @@ export async function bindMfa(email: string, secret: string, code: string) {
     failures: 0,
     blockedUntil: 0,
   });
+  persistMfa();
   mfaVersion.value++;
 }
 export async function verifyMfa(email: string, code: string) {
@@ -100,12 +128,15 @@ export async function verifyMfa(email: string, code: string) {
       a.blockedUntil = Date.now() + 60000;
       a.failures = 0;
     }
+    persistMfa();
     throw new Error("验证码不正确、已过期或已使用，请使用新的验证码。");
   }
   a.failures = 0;
+  persistMfa();
 }
 export function removeMfa(email: string) {
   accounts.delete(key(email));
+  persistMfa();
   mfaVersion.value++;
 }
 export const challenge = reactive({

@@ -1,5 +1,5 @@
 // Local prototype account only. Production account provisioning and password checks belong on the backend.
-const account = "demo@acceptance.example";
+const accounts = ["demo@acceptance.example", "empty@acceptance.example"];
 interface Credential {
   salt: Uint8Array<ArrayBuffer>;
   hash: string;
@@ -25,15 +25,57 @@ async function hash(password: string, salt: Uint8Array<ArrayBuffer>) {
     .map((x) => x.toString(16).padStart(2, "0"))
     .join("");
 }
-const ready = (async () => {
-  const salt = crypto.getRandomValues(new Uint8Array(16));
-  credentials.set(account, {
-    salt,
-    hash: await hash("Acceptance@2026", salt),
-    failures: 0,
-    blockedUntil: 0,
-  });
-})();
+const storageKey = "acceptance.credentials.v1";
+function persistCredential(email: string) {
+  const account = normalize(email);
+  const c = credentials.get(account);
+  if (!c) return;
+  try {
+    sessionStorage.setItem(
+      account === accounts[0] ? storageKey : storageKey + ":" + account,
+      JSON.stringify({ ...c, salt: Array.from(c.salt) }),
+    );
+  } catch {
+    /* Retain in-memory behavior. */
+  }
+}
+const ready = Promise.all(
+  accounts.map(async (account) => {
+    try {
+      const saved = JSON.parse(
+        sessionStorage.getItem(
+          account === accounts[0] ? storageKey : storageKey + ":" + account,
+        ) || "null",
+      );
+      if (
+        saved &&
+        /^[a-f0-9]{64}$/.test(saved.hash) &&
+        Array.isArray(saved.salt) &&
+        saved.salt.length === 16 &&
+        saved.salt.every(
+          (n: number) => Number.isInteger(n) && n >= 0 && n <= 255,
+        ) &&
+        Number.isFinite(saved.failures) &&
+        Number.isFinite(saved.blockedUntil)
+      ) {
+        credentials.set(account, {
+          ...saved,
+          salt: new Uint8Array(saved.salt),
+        });
+        return;
+      }
+    } catch {
+      /* Initialize prototype credentials when storage is absent. */
+    }
+    const salt = crypto.getRandomValues(new Uint8Array(16));
+    credentials.set(account, {
+      salt,
+      hash: await hash("Acceptance@2026", salt),
+      failures: 0,
+      blockedUntil: 0,
+    });
+  }),
+);
 export function passwordIssue(password: string) {
   return password.length < 12 ||
     password.length > 128 ||
@@ -53,9 +95,11 @@ export async function checkPassword(email: string, password: string) {
       c.failures = 0;
       c.blockedUntil = Date.now() + 60000;
     }
+    persistCredential(email);
     throw new Error("账号或密码不正确。");
   }
   c.failures = 0;
+  persistCredential(email);
 }
 export async function changePassword(
   email: string,
@@ -71,4 +115,5 @@ export async function changePassword(
   const nextHash = await hash(next, salt);
   c.salt = salt;
   c.hash = nextHash;
+  persistCredential(email);
 }

@@ -2,13 +2,11 @@
 import ListPagination from "../components/ListPagination.vue";
 import { requestMfa } from "../lib/mfa";
 import { demo } from "../lib/store";
-import AppSelect from "../components/AppSelect.vue";
+import { useRouter } from "vue-router";
+const router = useRouter();
 import { computed, ref, watch, onBeforeUnmount } from "vue";
 import { mvp, type BankAccount } from "../lib/mvp";
-import { bankTemplate, submitAccount, removeAccount } from "../lib/banks";
-import { type LocalMaterial } from "../lib/onboarding";
-import OnboardingFields from "../components/OnboardingFields.vue";
-import MaterialInput from "../components/MaterialInput.vue";
+import { bankTemplate, removeAccount } from "../lib/banks";
 import AppModal from "../components/AppModal.vue";
 let live = true;
 onBeforeUnmount(() => {
@@ -16,17 +14,9 @@ onBeforeUnmount(() => {
 });
 const mode = ref(""),
   selected = ref<BankAccount>(),
-  country = ref("HK"),
-  routing = ref("SWIFT"),
-  relationship = ref("SELF"),
-  fields = ref<Record<string, string>>({}),
-  material = ref<LocalMaterial>(),
   error = ref(""),
   busy = ref(false),
   search = ref("");
-const template = computed(() =>
-  bankTemplate(country.value, routing.value, relationship.value),
-);
 const rows = computed(() =>
   mvp.banks.filter(
     (b) =>
@@ -43,18 +33,12 @@ const labels: Record<string, string> = {
   DECLINED: "已驳回",
   DELETING: "删除中",
 };
-watch(country, (c) => {
-  if (c === "US") routing.value = "SWIFT";
-});
 function open(b?: BankAccount) {
-  selected.value = b;
-  country.value = b?.country || "HK";
-  routing.value = b?.routing || "SWIFT";
-  relationship.value = b?.relationship || "SELF";
-  fields.value = { ...b?.fields };
-  material.value = b?.material;
-  error.value = "";
-  mode.value = "form";
+  void router.push(
+    b
+      ? `/client/accounts/${encodeURIComponent(b.no)}/edit`
+      : "/client/accounts/new",
+  );
 }
 async function run(fn: () => void | Promise<void>) {
   if (busy.value) return;
@@ -127,7 +111,10 @@ const visibleRows = computed(() =>
                 >
               </td>
               <td>{{ b.relationship === "SELF" ? "本企业" : "第三方企业" }}</td>
-              <td>{{ b.country }} / {{ b.routing }}</td>
+              <td>
+                {{ b.country === "HK" ? "中国香港" : b.country }} /
+                {{ b.routing }}
+              </td>
               <td>
                 <span
                   :class="[
@@ -186,55 +173,7 @@ const visibleRows = computed(() =>
       @close="mode = ''"
     >
       <p v-if="error" class="mvp-error" role="alert">{{ error }}</p>
-      <template v-if="mode === 'form'"
-        ><div class="mvp-sim-note">
-          仅支持企业对公账户，请按账户关系和银行所在地区填写资料。
-        </div>
-        <div class="onboard-fields">
-          <label
-            >账户关系<AppSelect
-              v-model="relationship"
-              label="账户关系"
-              :disabled="!!selected"
-              :options="[
-                { value: 'SELF', label: '本企业账户' },
-                { value: 'THIRD_PARTY', label: '第三方企业账户' },
-              ]" /></label
-          ><label
-            >银行所在地区<AppSelect
-              v-model="country"
-              label="银行所在地区"
-              :disabled="!!selected"
-              :options="[
-                { value: 'HK', label: '中国香港' },
-                { value: 'US', label: '美国' },
-              ]" /></label
-          ><label
-            >结算通道<AppSelect
-              v-model="routing"
-              label="结算通道"
-              :disabled="!!selected"
-              :options="[
-                { value: 'SWIFT', label: 'SWIFT' },
-                ...(country === 'HK' ? [{ value: 'RTGS', label: 'RTGS' }] : []),
-              ]"
-          /></label>
-        </div>
-        <h3 class="form-group-title">收款企业信息</h3>
-        <OnboardingFields
-          v-model="fields"
-          :fields="template.filter((f) => f.key.startsWith('p.'))"
-          :disabled="busy" />
-        <h3 class="form-group-title">银行账户信息</h3>
-        <OnboardingFields
-          v-model="fields"
-          :fields="template.filter((f) => f.key.startsWith('b.'))"
-          :disabled="busy" /><MaterialInput
-          v-model="material"
-          kind="BANK"
-          label="银行账户证明"
-      /></template>
-      <template v-else-if="selected"
+      <template v-if="selected"
         ><p v-if="mode === 'delete'">
           删除后不能再用于新的付款。提交后将进入删除处理中。
         </p>
@@ -261,7 +200,10 @@ const visibleRows = computed(() =>
           </div>
           <div>
             <dt>地区 / 币种 / 通道</dt>
-            <dd>{{ selected.country }} / USD / {{ selected.routing }}</dd>
+            <dd>
+              {{ selected.country === "HK" ? "中国香港" : selected.country }} /
+              USD / {{ selected.routing }}
+            </dd>
           </div>
           <div>
             <dt>账户关系</dt>
@@ -300,39 +242,6 @@ const visibleRows = computed(() =>
       <template #footer
         ><button class="btn secondary" :disabled="busy" @click="mode = ''">
           关闭</button
-        ><button
-          v-if="mode === 'form'"
-          class="btn primary"
-          :disabled="busy"
-          @click="
-            run(async () => {
-              const editing = selected;
-              const snapshot = {
-                country,
-                routing,
-                relationship,
-                fields: { ...fields },
-                material,
-              };
-              if (
-                editing &&
-                !(await requestMfa(demo.email, '验证身份后提交收款账户修改。'))
-              )
-                return;
-              if (!live) return;
-              submitAccount(
-                snapshot.country,
-                snapshot.routing,
-                snapshot.relationship,
-                snapshot.fields,
-                snapshot.material,
-                editing,
-              );
-              mode = '';
-            })
-          "
-        >
-          提交审核</button
         ><template v-if="mode === 'detail' && selected"
           ><button
             v-if="selected.status === 'DECLINED'"

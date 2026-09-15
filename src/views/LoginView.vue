@@ -13,6 +13,12 @@ const email = ref("demo@acceptance.example"),
   password = ref("Acceptance@2026"),
   error = ref(""),
   busy = ref(false);
+function chooseAccount(account: string) {
+  email.value = account;
+  password.value = "Acceptance@2026";
+  mfaCode.value = "";
+  error.value = "";
+}
 async function login() {
   if (busy.value) return;
   busy.value = true;
@@ -144,6 +150,28 @@ async function login() {
         <div class="large-icon"><IconBuildingBank :size="28" /></div>
         <h2>欢迎回到客户系统</h2>
         <p class="muted">进入您的企业资金工作空间</p>
+        <div
+          class="login-account-options"
+          role="group"
+          aria-label="选择原型账户"
+        >
+          <button
+            type="button"
+            :disabled="busy"
+            :aria-pressed="email === 'demo@acceptance.example'"
+            @click="chooseAccount('demo@acceptance.example')"
+          >
+            完整数据账户
+          </button>
+          <button
+            type="button"
+            :disabled="busy"
+            :aria-pressed="email === 'empty@acceptance.example'"
+            @click="chooseAccount('empty@acceptance.example')"
+          >
+            空白账户
+          </button>
+        </div>
         <label
           >账号<input
             v-model="email"
@@ -277,5 +305,27 @@ async function login() {
   .login-form {
     margin: 12px auto;
   }
+}
+</style>
+
+<style scoped>
+.login-account-options {
+  display: flex;
+  gap: 8px;
+  margin: 20px 0;
+}
+.login-account-options button {
+  flex: 1;
+  padding: 10px;
+  border: 1px solid #dce4d3;
+  border-radius: 8px;
+  color: #68785a;
+  background: white;
+  cursor: pointer;
+}
+.login-account-options button[aria-pressed="true"] {
+  background: #edf3e6;
+  color: #344829;
+  border-color: #8ca573;
 }
 </style>

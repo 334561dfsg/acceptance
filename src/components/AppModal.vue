@@ -2,7 +2,11 @@
 import { ref, onMounted, onBeforeUnmount, useId, watch, nextTick } from "vue";
 import { acquireModalScroll } from "../lib/modal-scroll";
 import { IconX } from "@tabler/icons-vue";
-const props = defineProps<{ title: string; preventClose?: boolean }>();
+const props = defineProps<{
+  title: string;
+  preventClose?: boolean;
+  size?: "default" | "wide";
+}>();
 const emit = defineEmits<{ close: [] }>();
 const titleId = useId();
 const dialog = ref<HTMLDialogElement>();
@@ -71,9 +75,9 @@ onBeforeUnmount(() => {
   <Teleport to="body"
     ><dialog
       ref="dialog"
-      :class="['modal', { closing }]"
+      :class="['modal', { closing, 'modal-wide': size === 'wide' }]"
       :aria-labelledby="titleId"
-      @cancel.prevent="close"
+      @cancel.self.prevent="close"
       @keydown="trapFocus"
     >
       <header>
