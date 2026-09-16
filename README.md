@@ -23,7 +23,8 @@ npm run build
 
 ## 路由
 
-- `/`：客户系统 / 管理后台两个入口。
+- `/`：官网 / 客户系统 / 管理后台三个入口。
+- `/website`：Acceptance 官网首页，介绍企业 USDT 收款、USD 对公结算、支持范围及常见问题。
 - `/client/onboarding`：企业申请、KYC、审核进度；认证通过后展示企业资料。
 - `/client/accounts`：多个对公收款账户、独立审核和详情。
 - `/client/exchange`：使用 USDT 余额支付 USD，未开户或未完成审核时显示引导。

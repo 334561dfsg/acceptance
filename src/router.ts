@@ -9,6 +9,11 @@ const router = createRouter({
   history: createWebHistory(),
   routes: [
     { path: "/", component: PortalView },
+    {
+      path: "/website",
+      component: () => import("./views/WebsiteView.vue"),
+      meta: { title: "企业稳定币收款与美元结算" },
+    },
     { path: "/login", component: LoginView },
     { path: "/admin", redirect: "/admin/customers" },
     {
